@@ -1,0 +1,51 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'SocketRelay'
+version = '1.0.0'
+
+jar {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                   'Implementation-Version': project.version)
+    }
+}
+
+apply plugin: 'maven-publish'
+publishing {
+	publications {
+		maven(MavenPublication) {
+			groupId = 'com.socketrelay'
+			artifactId = 'socketrelay-common'
+			version = '1.0.0'
+
+			from components.java
+		}
+	}
+}
+
+configurations {
+    compile {
+        transitive = false
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+}
+
+task copyJars(type: Copy, dependsOn: subprojects.jar) {
+    from(jar) 
+    into project.file('dest')
+}
+
+task copyDeps(type: Copy) {
+    from configurations.runtime 
+    into project.file('dest')
+}
+
+task buildLib(dependsOn: [copyJars, copyDeps, jar, publishToMavenLocal])
