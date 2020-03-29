@@ -148,7 +148,7 @@ public class ServerConnection extends Thread {
 	public void processMessage(Configuration message) {
 		configuration=message;
 		for (ConnectionListener configurationListener:cConnectionListeners) {
-			configurationListener.receiveConfiguration(message);
+			configurationListener.receiveConfiguration(server, message);
 		}
 	}
 

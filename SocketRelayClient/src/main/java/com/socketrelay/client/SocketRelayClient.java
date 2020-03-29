@@ -3,6 +3,7 @@ package com.socketrelay.client;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -66,8 +67,8 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 	private JLabel gameLabel=new JLabel();
 	private JLabel connectionsLabel=new JLabel();
 	
-	private String serverIp;
 	private ServerConnection serverConnection;
+	private PlayerConnection playerConnection;
 	
 	public SocketRelayClient() throws FileNotFoundException, IOException {
 		super("Socket Relay");
@@ -133,7 +134,6 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		gbc.insets=new Insets(3, 15, 3, 15);
 		gbc.gridx=0;
 		gbc.gridy=0;
-		gbc.gridwidth=2;
 		gbc.weightx=1000;
 		gbc.anchor=GridBagConstraints.NORTHWEST;
 		gbc.fill=GridBagConstraints.BOTH;
@@ -154,14 +154,15 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		
 		gbc.gridy++;
 		panel.add(new JLabel(),gbc);
+
+		JPanel buttonsPanel=new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		buttonsPanel.add(new JButton(new ConnectPlayerAction()));
+		buttonsPanel.add(new JButton(new ConnectHostAction()));
 		
-		gbc.gridx=1;
-		gbc.gridwidth=1;
 		gbc.weightx=0;
 		gbc.gridy++;
-		panel.add(new JButton(new ConnectAction()),gbc);
+		panel.add(buttonsPanel,gbc);
 		
-		gbc.gridx=0;
 		gbc.gridy++;
 		gbc.weightx=1000;
 		gbc.weighty=1000;
@@ -244,9 +245,8 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 	}
 
 	@Override
-	public void receiveConfiguration(Configuration configuration) {
-		String name=servers.get(serverIp).getIp();
-		connectionLabel.setText("<html><b>"+name+":"+configuration.getClientPort()+"</b></html>");
+	public void receiveConfiguration(Server server, Configuration configuration) {
+		connectionLabel.setText("<html><b>"+server.getIp()+":"+configuration.getClientPort()+"</b></html>");
 	}
 	
 	public void clientConnectedChanged(int clients) {
@@ -265,17 +265,15 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		getContentPane().add(mainPanel);
 	}
 
-	class ConnectAction extends AbstractAction {
+	class ConnectHostAction extends AbstractAction {
 		private static final long serialVersionUID = 1L;
 
-		public ConnectAction() {
-			putValue(NAME, "Connect");
+		public ConnectHostAction() {
+			putValue(NAME, "Connect Host");
 		}
 		
 		@Override
 		public void actionPerformed(ActionEvent actionEvent) {
-			// TODO: Split out url from port here
-//			serverIp=serverComboBox.getModel().getSelectedItem().toString();
 			Server server=servers.get(serverComboBox.getModel().getSelectedItem().toString());
 			Game game=games.get(gameComboBox.getSelectedItem().toString());
 			serverConnection=new ServerConnection(server,game);
@@ -294,6 +292,43 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		}
 	}
 
+	class ConnectPlayerAction extends AbstractAction {
+		private static final long serialVersionUID = 1L;
+
+		public ConnectPlayerAction() {
+			putValue(NAME, "Connect as Player");
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent actionEvent) {
+			String portString=JOptionPane.showInputDialog(null,"Enter the port number to connect to.","Port Number",JOptionPane.OK_CANCEL_OPTION);
+			try {
+				if (portString!=null) {
+					int port=Integer.parseInt(portString);
+					Server server=servers.get(serverComboBox.getModel().getSelectedItem().toString());
+					Game game=games.get(gameComboBox.getSelectedItem().toString());
+					
+					playerConnection=new PlayerConnection(server,game,port);
+					playerConnection.addConnectionListener(SocketRelayClient.this);
+					try {
+						playerConnection.connect();
+						gameLabel.setText("<html><b>"+gameComboBox.getSelectedItem()+"</b></html>");
+						cardLayout.show(cardPanel, "Connected");
+					} catch (ConnectException connectException) {
+						JOptionPane.showMessageDialog(null, "Connection was refused port may be bound locally.\n\n"+server.getIp()+":"+server.getPort(),"Unable to listen locally",JOptionPane.WARNING_MESSAGE);
+						playerConnection.close();
+					} catch (IOException e) {
+						logger.error(e.getMessage(),e);
+						playerConnection.close();
+					}
+				}
+			} catch (NumberFormatException e) {
+				logger.warn(e.getMessage(),e);
+				JOptionPane.showInputDialog(null,"The port number was not formatted correctly, it must just be an integer number.","Port Number Error",JOptionPane.WARNING_MESSAGE);
+			}
+		}
+	}
+
 	class CloseAction extends AbstractAction {
 		private static final long serialVersionUID = 1L;
 
@@ -303,7 +338,14 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			serverConnection.close();
+			if (serverConnection!=null) {
+				serverConnection.close();
+				serverConnection=null;
+			}
+			if (playerConnection!=null) {
+				playerConnection.close();
+				playerConnection=null;
+			}
 		}
 		
 	}
