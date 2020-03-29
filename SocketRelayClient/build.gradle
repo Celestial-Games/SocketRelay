@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id "edu.sc.seis.launch4j" version "2.4.6"
 }
 
 group = 'SocketRelay'
@@ -50,19 +51,30 @@ jar {
     }
 }
 
+task cleanDest(type: Delete) {
+    delete 'build/dest'
+}
+
 task copyTask(type: Copy) {
     from file('config.json')
-    into project.file('dest')
+    into file('build/dest/SocketRelayClient')
 }
 
-task copyJars(type: Copy) {
-    from(jar) 
-    into project.file('dest')
+task createJavaExe(type: edu.sc.seis.launch4j.tasks.Launch4jLibraryTask) {
+    outfile = 'SocketRelayClient.exe'
+	mainClassName = 'com.socketrelay.client.SocketRelayClient'
+    icon = "${projectDir}/icon.ico"
+    fileDescription = 'The Scoket Relay Client.'
+    jreMinVersion=1.8
+    outputDir="dest/SocketRelayClient"
 }
 
-task copyDeps(type: Copy) {
-    from configurations.implementation 
-    into project.file('dest')
+task zipClient(type: Zip) {
+	from 'build/dest'
+	include '*'
+	include '*/**'
+	archiveName 'SocketRelayClient.zip'
+	//destinationDir(file('/dir1/dir2/dir3/'))
 }
 
-task buildLib(dependsOn: [copyJars, copyDeps, copyTask, jar, publishToMavenLocal])
+task buildLib(dependsOn: [cleanDest, jar, createJavaExe, copyTask, publishToMavenLocal, zipClient])
