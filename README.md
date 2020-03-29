@@ -56,10 +56,16 @@ Local\ Test=localhost:10000
 
 ## Downloads
 
-Client http://downloads.celestial-games.com/socketrelay/SocketRelayClient.zip
-
-Server http://downloads.celestial-games.com/socketrelay/SocketRelayServer.zip
+Download | Link
+-------- | -------------
+Client   | http://downloads.celestial-games.com/socketrelay/SocketRelayClient.zip
+Server   | http://downloads.celestial-games.com/socketrelay/SocketRelayServer.zip
 
 ## Getting in touch
 
 Our preference is to communicate on discord. Please feel free to get in touch here. https://discord.gg/PKpkurH
+
+# Guides
+
+* [Fantasy Grounds](docs/fantasygrounds)
+* [FAQ](docs/faq)
