@@ -67,5 +67,5 @@ Our preference is to communicate on discord. Please feel free to get in touch he
 
 # Guides
 
-* [Fantasy Grounds](docs/fantasygrounds)
-* [FAQ](docs/faq)
+* [Fantasy Grounds](docs/fantasygrounds.md)
+* [FAQ](docs/faq.md)
