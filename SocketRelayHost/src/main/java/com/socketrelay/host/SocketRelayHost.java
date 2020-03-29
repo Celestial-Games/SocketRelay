@@ -37,7 +37,7 @@ public class SocketRelayHost {
 	}
 	
 	private void loadConfig() throws IOException {
-		File configFile=new File("socketserver.config");
+		File configFile=new File("config.json");
 		if (configFile.exists()) {
 			config=gson.fromJson(new FileReader(configFile), SocketRelayConfig.class);
 		}
