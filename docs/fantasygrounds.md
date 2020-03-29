@@ -28,5 +28,6 @@ Now start up fantasy grounds and say join game.
 
 ![client](/images/fc_join.jpg)
 
-> You must say localhost for the address as FC will be connecting your instance of Socket Relay.
+> You must say localhost for the address as FG will be connecting your instance of Socket Relay.
 
+Click start and FG should connect to your host players machine.
