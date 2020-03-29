@@ -74,7 +74,6 @@ task zipClient(type: Zip) {
 	include '*'
 	include '*/**'
 	archiveName 'SocketRelayClient.zip'
-	//destinationDir(file('/dir1/dir2/dir3/'))
 }
 
 task buildLib(dependsOn: [cleanDest, jar, createJavaExe, copyTask, publishToMavenLocal, zipClient])
