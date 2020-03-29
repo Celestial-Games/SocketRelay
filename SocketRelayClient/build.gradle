@@ -51,7 +51,7 @@ jar {
 }
 
 task copyTask(type: Copy) {
-    from file('settings.gradle')
+    from file('config.json')
     into project.file('dest')
 }
 
