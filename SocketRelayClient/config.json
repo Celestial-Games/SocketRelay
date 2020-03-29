@@ -7,7 +7,7 @@
 		},
 		{
 			"name":"Localhost Test",
-			"ip":"loclhost",
+			"ip":"localhost",
 			"port":10000
 		}
 	],
