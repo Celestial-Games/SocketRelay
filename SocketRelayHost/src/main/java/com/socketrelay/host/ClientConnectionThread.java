@@ -66,7 +66,6 @@ public class ClientConnectionThread extends Thread {
 			while (socket.isConnected()) {
 				int r=input.read(buffer);
 				if (r>0) {
-					System.out.println(">>"+new String(buffer,0,r));
 					session.write(new Data(clientId,Arrays.copyOf(buffer, r)));
 				} else if (r==-1) {
 					close();

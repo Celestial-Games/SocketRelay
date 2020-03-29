@@ -36,7 +36,6 @@ public class SocketLoopback extends Thread {
 			
 			@Override
 			public void run() {
-				System.out.println("New Connection");
 				openSockets.add(socket);
 				try {
 					InputStream inputStream=socket.getInputStream();
@@ -47,7 +46,6 @@ public class SocketLoopback extends Thread {
 						int len=inputStream.read(buffer);
 						if (len>0) {
 							outputStream.write(buffer, 0, len);
-							//System.out.println(new String(buffer, 0, len));
 						} else if (len==-1) {
 							socket.close();
 							break;
