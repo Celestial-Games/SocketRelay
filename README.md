@@ -26,11 +26,11 @@ java -jar SocketRelayClient-1.0.0.jar
 
 ### Server configuration
 
-The server configuration is done through a json file called `socketserver.config`.
+The server configuration is done through a json file called `config.json`.
 
 ```js
 {
-    'serverport': 10000, // The port this server will listen on, this is the port the client connects to.
+	'serverport': 10000, // The port this server will listen on, this is the port the client connects to.
 	'serverIp': '0.0.0.0', // This is the ip address you want the server to bind to 0.0.0.0 will bind to all available interfaces
 	'clientLow': 10001, // This is the low port to open for player connection.
 	'clientHigh': 12000 // This is the high port to open for player connection.
@@ -39,20 +39,41 @@ The server configuration is done through a json file called `socketserver.config
 
 ## Client Component
 
+You can just the `SocketRelayClient.exe` or if you on Linux or Mac you can use java to start the SocketRelay.
+
 ```cmd
 java -jar SocketRelayClient-1.0.0.jar
 ```
 
 ![client](/images/client.png)
 
-### Server Properties file
+### The client configuration `config.json`
 
-The server properties file describes hosted server you can use from the client.
+The config.json file describes the known games and the list of servers.
 
-```properties
-Celestial\ Cape\ Town=socketrelay.celestial-games.com:20000
-Local\ Test=localhost:10000
+```js
+{
+	"servers":[
+		{
+			"name":"Celestial Cape Town",
+			"ip":"socketrelay.celestial-games.com",
+			"port":20000
+		},
+		{
+			"name":"Localhost Test",
+			"ip":"localhost",
+			"port":10000
+		}
+	],
+	"games":[
+		{
+			"name":"Fantasy Grounds",
+			"port":1802
+		}
+	]
 ```
+
+While you can modify this file it's ideal to rather let us know the changes you want to add and we can facilitated this in the root.
 
 ## Downloads
 
