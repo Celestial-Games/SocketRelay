@@ -12,6 +12,21 @@ Start up the Socket Relay Client pick a server and the game. Click connect as ho
 
 > You will need to send your players the port number and tell them which server you connected to.
 
+Start your Fantasy Grounds and host a game as you would always.
+
 ## Client Setup
 
-Start the Socket Relay Client. Click the 
+Start the Socket Relay Client. Click the 'Connect as Player' button.
+
+You should see
+
+![client](/images/fc_port.png)
+
+Enter the port number from your hoist player and click ok.
+
+Now start up fantasy grounds and say join game.
+
+![client](/images/fc_join.jpg)
+
+> You must say localhost for the address as FC will be connecting your instance of Socket Relay.
+
