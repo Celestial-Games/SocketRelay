@@ -50,14 +50,30 @@ jar {
     }
 }
 
+task cleanDest(type: Delete) {
+    delete 'build/dest'
+}
+
 task copyJars(type: Copy, dependsOn: subprojects.jar) {
     from(jar) 
-    into project.file('dest')
+    into project.file('build/dest/SocketRelayServer')
 }
 
 task copyDeps(type: Copy) {
     from configurations.implementation 
-    into project.file('dest')
+    into project.file('build/dest/SocketRelayServer')
 }
 
-task buildLib(dependsOn: [copyJars, copyDeps, jar, publishToMavenLocal])
+task copySh(type: Copy) {
+    from project.file('SocketRelayServer.sh') 
+    into project.file('build/dest/SocketRelayServer')
+}
+
+task zipServer(type: Zip) {
+	from 'build/dest'
+	include '*'
+	include '*/**'
+	archiveName 'SocketRelayServer.zip'
+}
+
+task buildLib(dependsOn: [cleanDest, jar, copyJars, copyDeps, copySh, publishToMavenLocal, zipServer])
