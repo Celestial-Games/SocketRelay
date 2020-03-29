@@ -27,7 +27,7 @@ import com.google.gson.GsonBuilder;
 public class SocketRelayHost {
 	private static final Logger logger=LoggerFactory.getLogger(SocketRelayConfig.class);
 	
-	private static Gson gson=new GsonBuilder().create();
+	private static final Gson gson=new GsonBuilder().create();
 	
 	private SocketRelayConfig config=new SocketRelayConfig(); 
 	private Set<Integer> portsUsed=Collections.synchronizedSet(new HashSet<>());

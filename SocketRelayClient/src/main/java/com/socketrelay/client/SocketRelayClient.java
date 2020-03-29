@@ -11,13 +11,14 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.ConnectException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 import java.util.logging.LogManager;
 
 import javax.imageio.ImageIO;
@@ -35,6 +36,11 @@ import javax.swing.UIManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.socketrelay.client.beans.Config;
+import com.socketrelay.client.beans.Game;
+import com.socketrelay.client.beans.Server;
 import com.socketrelay.client.swing.TextAreaOutputStream;
 import com.socketrelay.messages.Configuration;
 
@@ -42,9 +48,13 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 	private static final long serialVersionUID = 1L;
 	
 	private static final Logger logger=LoggerFactory.getLogger(SocketRelayClient.class); 
+	private static final Gson gson=new GsonBuilder().create();
 
-	private Properties serverProperties=new Properties();
-	private Properties gamesProperties=new Properties();
+	private Config config;
+	private Map<String,Server> servers=new HashMap<>();
+	private Map<String,Game> games=new HashMap<>();
+	private List<String> serverNames=new ArrayList<>();
+	private List<String> gameNames=new ArrayList<>();
 
 	private CardLayout cardLayout=new CardLayout();
 	private JPanel cardPanel=new JPanel(cardLayout);
@@ -90,15 +100,36 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 	}
 	
 	private void loadDetails() throws FileNotFoundException, IOException {
-		serverProperties.load(new FileInputStream(new File("servers.properties")));
-		gamesProperties.load(new FileInputStream(new File("games.properties")));
+		File configFile=new File("config.json");
+		if (configFile.exists()) {
+			config=gson.fromJson(new FileReader(configFile), Config.class);
+			for (Server server:config.getServers()) {
+				if (!servers.containsKey(server.getName())) {
+					servers.put(server.getName(),server);
+					serverNames.add(server.getName());
+				} else {
+					logger.error("Config has a duplicated server '"+server.getName()+"' ignoring all but the first one.");
+				}
+			}
+			for (Game game:config.getGames()) {
+				if (!games.containsKey(game.getName())) {
+					games.put(game.getName(),game);
+					gameNames.add(game.getName());
+				} else {
+					logger.error("Config has a duplicated game '"+game.getName()+"' ignoring all but the first one.");
+				}
+			}
+		}else {
+			JOptionPane.showMessageDialog(null, "Unable to find config.json file.","Unable to start",JOptionPane.ERROR_MESSAGE);
+			System.exit(-1);
+		}
 	}
 	
 	private JPanel buildConnectPanel() {
 		JPanel panel=new JPanel(new GridBagLayout());
 		
 		GridBagConstraints gbc=new GridBagConstraints();
-		serverComboBox=new JComboBox<String>(Collections.list(serverProperties.keys()).toArray(new String[0]));
+		serverComboBox=new JComboBox<String>(serverNames.toArray(new String[serverNames.size()]));
 		gbc.insets=new Insets(3, 15, 3, 15);
 		gbc.gridx=0;
 		gbc.gridy=0;
@@ -117,7 +148,7 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		gbc.gridy++;
 		panel.add(new JLabel("Pick a game"),gbc);
 		
-		gameComboBox=new JComboBox<String>(Collections.list(gamesProperties.keys()).toArray(new String[0]));
+		gameComboBox=new JComboBox<String>(gameNames.toArray(new String[gameNames.size()]));
 		gbc.gridy++;
 		panel.add(gameComboBox,gbc);
 		
@@ -214,9 +245,7 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 
 	@Override
 	public void receiveConfiguration(Configuration configuration) {
-		// TODO: Move this into a shared method
-		String name=serverProperties.getProperty(serverIp);
-		name=name.substring(0,name.indexOf(":"));
+		String name=servers.get(serverIp).getIp();
 		connectionLabel.setText("<html><b>"+name+":"+configuration.getClientPort()+"</b></html>");
 	}
 	
@@ -246,15 +275,17 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		@Override
 		public void actionPerformed(ActionEvent actionEvent) {
 			// TODO: Split out url from port here
-			serverIp=serverComboBox.getModel().getSelectedItem().toString();
-			serverConnection=new ServerConnection(serverProperties.getProperty(serverIp),gamesProperties.getProperty((String)gameComboBox.getSelectedItem()));
+//			serverIp=serverComboBox.getModel().getSelectedItem().toString();
+			Server server=servers.get(serverComboBox.getModel().getSelectedItem().toString());
+			Game game=games.get(gameComboBox.getSelectedItem().toString());
+			serverConnection=new ServerConnection(server,game);
 			serverConnection.addConnectionListener(SocketRelayClient.this);
 			try {
 				serverConnection.connect();
 				gameLabel.setText("<html><b>"+gameComboBox.getSelectedItem()+"</b></html>");
 				cardLayout.show(cardPanel, "Connected");
 			} catch (ConnectException connectException) {
-				JOptionPane.showMessageDialog(null, "Connection was refused to destination.\n\n"+serverProperties.getProperty(serverIp),"Unable to connect to server",JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(null, "Connection was refused to destination.\n\n"+server.getIp()+":"+server.getPort(),"Unable to connect to server",JOptionPane.WARNING_MESSAGE);
 				serverConnection.close();
 			} catch (IOException e) {
 				logger.error(e.getMessage(),e);

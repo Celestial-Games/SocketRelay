@@ -21,6 +21,8 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.socketrelay.client.beans.Game;
+import com.socketrelay.client.beans.Server;
 import com.socketrelay.messages.ClientClose;
 import com.socketrelay.messages.Configuration;
 import com.socketrelay.messages.Data;
@@ -29,10 +31,8 @@ import com.socketrelay.messages.Heartbeat;
 public class ServerConnection extends Thread {
 	private static final Logger logger=LoggerFactory.getLogger(ServerConnection.class);
 
-	private String ip;
-	private int port;
-	private String clientIp;
-	private int clientPort;
+	private Server server;
+	private Game game;
 	private Configuration configuration=null;
 
 	private NioSocketConnector connector=null;
@@ -42,18 +42,9 @@ public class ServerConnection extends Thread {
 	private Map<String,ClientConnection> clientConnections=new HashMap<>();
 	private List<ConnectionListener> cConnectionListeners=new ArrayList<>();
 
-	public ServerConnection(String server,String client){
-		String[] parts=server.split(":");
-
-		// TODO: Check parts only has two pieces
-		ip=parts[0];
-		port=Integer.parseInt(parts[1]);
-
-		parts=client.split(":");
-
-		// TODO: Check parts only has two pieces
-		clientIp=parts[0];
-		clientPort=Integer.parseInt(parts[1]);
+	public ServerConnection(Server server,Game game){
+		this.server=server;
+		this.game=game;
 	}
 
 	public void addConnectionListener(ConnectionListener connectionListener) {
@@ -111,7 +102,7 @@ public class ServerConnection extends Thread {
 			}
 		});
 
-		future = connector.connect(new InetSocketAddress(ip, port));
+		future = connector.connect(new InetSocketAddress(server.getIp(), server.getPort()));
 		start();
 	}
 
@@ -165,7 +156,7 @@ public class ServerConnection extends Thread {
 		try {
 			if (!clientConnections.containsKey(message.getClientId())) {
 				synchronized (clientConnections) {
-					clientConnections.put(message.getClientId(),new ClientConnection(session, message.getClientId(), clientIp, clientPort));
+					clientConnections.put(message.getClientId(),new ClientConnection(session, message.getClientId(), "localhost", game.getPort()));
 					sendClientsCount();
 				}
 			}
