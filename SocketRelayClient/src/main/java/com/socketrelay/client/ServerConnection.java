@@ -39,7 +39,7 @@ public class ServerConnection extends Thread {
 	private ConnectFuture future=null;
 	private IoSession session=null;
 
-	private Map<String,ClientConnection> clientConnections=new HashMap<>();
+	private Map<String,Map<Integer,ClientConnection>> clientsMap=new HashMap<>();
 	private List<ConnectionListener> cConnectionListeners=new ArrayList<>();
 
 	public ServerConnection(Server server,Game game){
@@ -151,22 +151,45 @@ public class ServerConnection extends Thread {
 			configurationListener.receiveConfiguration(server, message);
 		}
 	}
+	
+	private void removeClientConnection(String clientId, int connectionId) {
+		Map<Integer,ClientConnection> connectionsMap=clientsMap.get(clientId);
+		if (connectionsMap!=null) {
+			synchronized (connectionsMap) {
+				connectionsMap.remove(connectionId);
+				if (connectionsMap.size()==0) {
+					clientsMap.remove(clientId);
+				}
+			}
+			sendClientsCount();
+		}
+	}
 
 	public void processMessage(Data message) {
 		try {
-			if (!clientConnections.containsKey(message.getClientId()+message.getConnectionId())) {
-				synchronized (clientConnections) {
-					clientConnections.put(message.getClientId()+message.getConnectionId(),new ClientConnection(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort()));
-					sendClientsCount();
+			Map<Integer,ClientConnection> connectionsMap=clientsMap.get(message.getClientId());
+			if (connectionsMap==null) {
+				synchronized (clientsMap) {
+					connectionsMap=clientsMap.get(message.getClientId());
+					if (connectionsMap==null) {
+						connectionsMap=new HashMap<Integer, ClientConnection>();
+						clientsMap.put(message.getClientId(),connectionsMap);
+						sendClientsCount();
+					}
 				}
 			}
 			
-			clientConnections.get(message.getClientId()+message.getConnectionId()).send(message);
+			ClientConnection clientConnection=connectionsMap.get(message.getConnectionId());
+			if (clientConnection==null) {
+				clientConnection=new ClientConnection(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort());
+				connectionsMap.put(message.getConnectionId(),clientConnection);
+			}
+			
+			clientConnection.send(message);
 		} catch (IOException e) {
 			logger.error(e.getMessage(),e);
 			session.write(new ClientClose(message.getClientId(),message.getConnectionId()));
-			clientConnections.remove(message.getClientId()+message.getConnectionId()).close();
-			sendClientsCount();
+			removeClientConnection(message.getClientId(),message.getConnectionId());
 		}
 	}
 
@@ -176,14 +199,13 @@ public class ServerConnection extends Thread {
 
 	private void sendClientsCount() {
 		for (ConnectionListener configurationListener:cConnectionListeners) {
-			configurationListener.clientConnectedChanged(clientConnections.size());
+			configurationListener.clientConnectedChanged(clientsMap.size());
 		}
 	}
 	
 	public void processMessage(ClientClose message) {
-		synchronized (clientConnections) {
-			clientConnections.remove(message.getClientId()+message.getConnectionId()).close();
-			sendClientsCount();
+		synchronized (clientsMap) {
+			removeClientConnection(message.getClientId(),message.getConnectionId());
 		}
 	}
 
@@ -193,8 +215,10 @@ public class ServerConnection extends Thread {
 			for (ConnectionListener configurationListener:cConnectionListeners) {
 				configurationListener.serverConnectedClosed();
 			}
-			for (ClientConnection clientConnection:clientConnections.values()) {
-				clientConnection.close();
+			for (Map<Integer,ClientConnection> clientConnections:clientsMap.values()) {
+				for (ClientConnection clientConnection:clientConnections.values()) {
+					clientConnection.close();
+				}
 			}
 			if (session!=null && session.isConnected()) {
 				session.closeNow();
