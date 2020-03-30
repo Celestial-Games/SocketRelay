@@ -21,12 +21,14 @@ public class ClientConnectionThread extends Thread {
 	private Socket socket;
 	private IoSession session;
 	private String clientId;
+	private int connectionId;
 	private ServerConnectionThread parent;
 	
 	// TODO: using ServerConnectionThread as parent here is ugly. Needs a refactor.
-	public ClientConnectionThread(ServerConnectionThread parent, String clientId, IoSession session, Socket socket) throws IOException{
+	public ClientConnectionThread(ServerConnectionThread parent, String clientId, int connectionId, IoSession session, Socket socket) throws IOException{
 		this.parent=parent;
 		this.clientId=clientId;
+		this.connectionId=connectionId;
 		this.socket=socket;
 		this.session=session;
 		input=socket.getInputStream();
@@ -38,9 +40,17 @@ public class ClientConnectionThread extends Thread {
 		return clientId;
 	}
 
+	public int getConnectionId() {
+		return connectionId;
+	}
+
+	public void setConnectionId(int connectionId) {
+		this.connectionId = connectionId;
+	}
+
 	public void close() {
 		parent.removeChild(this);
-		session.write(new ClientClose(clientId));
+		session.write(new ClientClose(clientId,connectionId));
 		session.setAttribute(clientId,null);
 		try {
 			if (!socket.isClosed()) {
@@ -66,7 +76,7 @@ public class ClientConnectionThread extends Thread {
 			while (socket.isConnected()) {
 				int r=input.read(buffer);
 				if (r>0) {
-					session.write(new Data(clientId,Arrays.copyOf(buffer, r)));
+					session.write(new Data(clientId,connectionId,Arrays.copyOf(buffer, r)));
 				} else if (r==-1) {
 					close();
 					break;

@@ -22,10 +22,12 @@ public class ClientConnection extends Thread {
 	private OutputStream output;
 	private IoSession session;
 	private String clientId;
+	private int connectionId;
 
-	public ClientConnection(IoSession session, String clientId, String host,int port) throws UnknownHostException, IOException {
+	public ClientConnection(IoSession session, String clientId, int connectionId, String host,int port) throws UnknownHostException, IOException {
 		this.session=session;
 		this.clientId=clientId;
+		this.connectionId=connectionId;
 
 		socket=new Socket(host, port);
 		input=socket.getInputStream();
@@ -40,7 +42,7 @@ public class ClientConnection extends Thread {
 			while (socket.isConnected()) {
 				int len=input.read(buffer);
 				if (len>0) {
-					session.write(new Data(clientId,Arrays.copyOf(buffer, len)));
+					session.write(new Data(clientId, connectionId, Arrays.copyOf(buffer, len)));
 				} else if (len==-1) {
 					break;
 				}
@@ -48,7 +50,7 @@ public class ClientConnection extends Thread {
 		} catch (Exception e) {
 			logger.error(e.getMessage(),e);
 		}
-		session.write(new ClientClose(clientId));
+		session.write(new ClientClose(clientId,connectionId));
 	}
 
 	public synchronized void send(Data data) throws IOException {

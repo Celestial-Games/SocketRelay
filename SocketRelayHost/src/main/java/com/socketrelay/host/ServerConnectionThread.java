@@ -1,6 +1,7 @@
 package com.socketrelay.host;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class ServerConnectionThread extends Thread {
 	private IoSession session;
 	private Map<String,ClientConnectionThread> clientConnectionThreads=new HashMap<>();
 
-	private long nextClientId=1;
+	private int nextClientId=1;
 	
 	public ServerConnectionThread(IoSession session, ServerSocket serverSocket) throws IOException{
 		this.serverSocket=serverSocket;
@@ -31,7 +32,7 @@ public class ServerConnectionThread extends Thread {
 	
 	public void removeChild(ClientConnectionThread clientConnectionThread) {
 		synchronized (clientConnectionThreads) {
-			clientConnectionThreads.remove(clientConnectionThread.getClientId());
+			clientConnectionThreads.remove(clientConnectionThread.getClientId()+clientConnectionThread.getConnectionId());
 		}
 	}
 	
@@ -46,8 +47,8 @@ public class ServerConnectionThread extends Thread {
 		session.closeNow();
 	}
 
-	public void closeClient(String clientId) {
-		ClientConnectionThread clientConnectionThread=clientConnectionThreads.get(clientId);
+	public void closeClient(String clientId,int connectionId) {
+		ClientConnectionThread clientConnectionThread=clientConnectionThreads.get(clientId+connectionId);
 		if (clientConnectionThread!=null) {
 			clientConnectionThread.close();
 		}
@@ -55,7 +56,7 @@ public class ServerConnectionThread extends Thread {
 	
 	public void writeToClient(Data data) {
 		if (data.getData()!=null) {
-			ClientConnectionThread clientConnectionThread=clientConnectionThreads.get(data.getClientId());
+			ClientConnectionThread clientConnectionThread=clientConnectionThreads.get(data.getClientId()+data.getConnectionId());
 			synchronized (clientConnectionThread) {
 				clientConnectionThread.deliver(data);
 			}
@@ -69,12 +70,13 @@ public class ServerConnectionThread extends Thread {
 				if (socket!=null){
 					// New connection
 					logger.info("New client socket connected from "+socket.getRemoteSocketAddress().toString());
-					String clientId=""+nextClientId++;
-					ClientConnectionThread clientConnectionThread=new ClientConnectionThread(this, clientId, session, socket);
+					String clientId=(((InetSocketAddress)socket.getRemoteSocketAddress()).getAddress()).toString().replace("/","");
+					int connectionId=nextClientId++;
+					ClientConnectionThread clientConnectionThread=new ClientConnectionThread(this, clientId, connectionId, session, socket);
 					synchronized (clientConnectionThreads) {
-						clientConnectionThreads.put(clientId,clientConnectionThread);
+						clientConnectionThreads.put(clientId+connectionId,clientConnectionThread);
 					}
-					session.write(new Data(clientId,null));
+					session.write(new Data(clientId, connectionId ,null));
 					clientConnectionThread.start();
 				}
 			}

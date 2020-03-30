@@ -154,18 +154,18 @@ public class ServerConnection extends Thread {
 
 	public void processMessage(Data message) {
 		try {
-			if (!clientConnections.containsKey(message.getClientId())) {
+			if (!clientConnections.containsKey(message.getClientId()+message.getConnectionId())) {
 				synchronized (clientConnections) {
-					clientConnections.put(message.getClientId(),new ClientConnection(session, message.getClientId(), "localhost", game.getPort()));
+					clientConnections.put(message.getClientId()+message.getConnectionId(),new ClientConnection(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort()));
 					sendClientsCount();
 				}
 			}
 			
-			clientConnections.get(message.getClientId()).send(message);
+			clientConnections.get(message.getClientId()+message.getConnectionId()).send(message);
 		} catch (IOException e) {
 			logger.error(e.getMessage(),e);
-			session.write(new ClientClose(message.getClientId()));
-			clientConnections.remove(message.getClientId()).close();
+			session.write(new ClientClose(message.getClientId(),message.getConnectionId()));
+			clientConnections.remove(message.getClientId()+message.getConnectionId()).close();
 		}
 	}
 

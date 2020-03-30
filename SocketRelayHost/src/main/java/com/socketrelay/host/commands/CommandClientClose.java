@@ -12,7 +12,7 @@ public class CommandClientClose extends Command<ClientClose> {
 	@Override
 	public void processCommand(IoSession session, ClientClose message) {
 		ServerConnectionThread serverConnectionThread=(ServerConnectionThread)session.getAttribute(HostConnectionThreadAttribute);
-		serverConnectionThread.closeClient(message.getClientId());
+		serverConnectionThread.closeClient(message.getClientId(),message.getConnectionId());
 	}
 
 }
