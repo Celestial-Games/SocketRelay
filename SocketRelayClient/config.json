@@ -14,7 +14,8 @@
 	"games":[
 		{
 			"name":"Fantasy Grounds",
-			"port":1802
+			"port":1802,
+			"protocol":"TCP"
 		}
 	]
 }
