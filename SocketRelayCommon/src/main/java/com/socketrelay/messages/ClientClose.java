@@ -14,6 +14,7 @@ public class ClientClose implements Serializable{
 	public ClientClose(String clientId, int connectionId) {
 		super();
 		this.clientId = clientId;
+		this.connectionId = connectionId;
 	}
 
 	public String getClientId() {

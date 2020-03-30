@@ -166,6 +166,7 @@ public class ServerConnection extends Thread {
 			logger.error(e.getMessage(),e);
 			session.write(new ClientClose(message.getClientId(),message.getConnectionId()));
 			clientConnections.remove(message.getClientId()+message.getConnectionId()).close();
+			sendClientsCount();
 		}
 	}
 
@@ -181,7 +182,7 @@ public class ServerConnection extends Thread {
 	
 	public void processMessage(ClientClose message) {
 		synchronized (clientConnections) {
-			clientConnections.remove(message.getClientId()).close();
+			clientConnections.remove(message.getClientId()+message.getConnectionId()).close();
 			sendClientsCount();
 		}
 	}

@@ -44,10 +44,6 @@ public class ClientConnectionThread extends Thread {
 		return connectionId;
 	}
 
-	public void setConnectionId(int connectionId) {
-		this.connectionId = connectionId;
-	}
-
 	public void close() {
 		parent.removeChild(this);
 		session.write(new ClientClose(clientId,connectionId));
