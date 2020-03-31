@@ -2,6 +2,7 @@ package com.socketrelay.client;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -24,6 +25,7 @@ import java.util.logging.LogManager;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -31,8 +33,10 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +69,10 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 
 	private JLabel connectionLabel=new JLabel();
 	private JLabel gameLabel=new JLabel();
+	private JLabel clientsLabel=new JLabel();
 	private JLabel connectionsLabel=new JLabel();
+	
+	private TrafficImage trafficImage;
 	
 	private ServerConnection serverConnection;
 	private PlayerConnection playerConnection;
@@ -82,6 +89,7 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		build();
 		
 		pack();
+		setMinimumSize(new Dimension(getWidth(),getHeight()));
 		
 		setLocationRelativeTo(null);
 
@@ -127,6 +135,7 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 	}
 	
 	private JPanel buildConnectPanel() {
+		JPanel outerPanel=new JPanel(new BorderLayout());
 		JPanel panel=new JPanel(new GridBagLayout());
 		
 		GridBagConstraints gbc=new GridBagConstraints();
@@ -158,27 +167,21 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		JPanel buttonsPanel=new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		buttonsPanel.add(new JButton(new ConnectPlayerAction()));
 		buttonsPanel.add(new JButton(new ConnectHostAction()));
-		
-		gbc.weightx=0;
-		gbc.gridy++;
-		panel.add(buttonsPanel,gbc);
-		
-		gbc.gridy++;
-		gbc.weightx=1000;
-		gbc.weighty=1000;
-		panel.add(new JLabel(),gbc);
-		
-		return panel;
+
+		outerPanel.add(panel,BorderLayout.CENTER);
+		outerPanel.add(buttonsPanel,BorderLayout.SOUTH);
+
+		return outerPanel;
 	}
 	
 	private JPanel buildConnectedPanel() {
+		JPanel outerPanel=new JPanel(new BorderLayout());
 		JPanel panel=new JPanel(new GridBagLayout());
 		
 		GridBagConstraints gbc=new GridBagConstraints();
 		gbc.insets=new Insets(3, 15, 3, 15);
 		gbc.gridx=0;
 		gbc.gridy=0;
-		gbc.gridwidth=2;
 		gbc.weightx=1000;
 		gbc.anchor=GridBagConstraints.NORTHWEST;
 		gbc.fill=GridBagConstraints.BOTH;
@@ -199,27 +202,38 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		gbc.gridy++;
 		panel.add(new JLabel(),gbc);
 
-		gbc.gridy++;
-		gbc.weightx=0;
-		panel.add(connectionsLabel,gbc);
-
-		gbc.gridx=1;
+		Box labelsBox=Box.createHorizontalBox();
+		labelsBox.add(clientsLabel);
+		labelsBox.add(connectionsLabel);
+		
 		gbc.gridwidth=1;
-		panel.add(new JButton(new CloseAction()),gbc);
-		
-		gbc.gridx=0;
 		gbc.gridy++;
-		gbc.weightx=1000;
-		gbc.weighty=1000;
-		panel.add(new JLabel(),gbc);
+		gbc.weighty=0;
+		gbc.weightx=0;
+		panel.add(labelsBox,gbc);
+
+		JPanel buttonsPanel=new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		buttonsPanel.add(new JButton(new CloseAction()));
 		
-		return panel;
+		outerPanel.add(panel,BorderLayout.CENTER);
+		outerPanel.add(buttonsPanel,BorderLayout.SOUTH);
+		
+		return outerPanel;
 	}
 
 	private JPanel buildTopPanel() {
 		cardPanel.add(buildConnectPanel(),"Connect");
 		cardPanel.add(buildConnectedPanel(),"Connected");
 		return cardPanel;
+	}
+
+	private JPanel buildTrafficPanel() {
+		JPanel panel=new JPanel(new BorderLayout());
+		
+		trafficImage=new TrafficImage();
+		panel.add(trafficImage);
+		
+		return panel;
 	}
 	
 	private JPanel buildLogPanel() {
@@ -238,9 +252,6 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		
 		panel.add(jScrollPane,BorderLayout.CENTER);
 		
-		panel.setMinimumSize(new Dimension(600, 400));
-		panel.setPreferredSize(new Dimension(600, 400));
-		
 		return panel;
 	}
 
@@ -249,18 +260,32 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		connectionLabel.setText("<html><b>"+server.getIp()+":"+configuration.getClientPort()+"</b></html>");
 	}
 	
-	public void clientConnectedChanged(int clients) {
-		connectionsLabel.setText("<html>Clients: <b>"+clients+"</b></html>");
+	public void clientConnectedChanged(int clients, int connections) {
+		clientsLabel.setText("<html>Clients: <b>"+clients+"</b></html>");
+		connectionsLabel.setText("<html>Connections: <b>"+connections+"</b></html>");
 	}
 	
 	public void serverConnectedClosed() {
 		cardLayout.show(cardPanel, "Connect");
 	}
 	
+	private JTabbedPane buildLowerPanel() {
+		JTabbedPane tabs=new JTabbedPane(JTabbedPane.BOTTOM);
+		
+		tabs.addTab("Data", buildTrafficPanel());
+		tabs.addTab("Logs", buildLogPanel());
+		
+		tabs.setMinimumSize(new Dimension(600, 400));
+		tabs.setPreferredSize(new Dimension(600, 400));
+
+		return tabs;
+	}
+	
+	
 	private void build(){
 		JPanel mainPanel=new JPanel(new BorderLayout());
 		mainPanel.add(buildTopPanel(),BorderLayout.NORTH);
-		mainPanel.add(buildLogPanel(),BorderLayout.CENTER);
+		mainPanel.add(buildLowerPanel(),BorderLayout.CENTER);
 		
 		getContentPane().add(mainPanel);
 	}
@@ -282,6 +307,8 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 				serverConnection.connect();
 				gameLabel.setText("<html><b>"+gameComboBox.getSelectedItem()+"</b></html>");
 				cardLayout.show(cardPanel, "Connected");
+				
+				trafficImage.setTrafficCounterSource(serverConnection);
 			} catch (ConnectException connectException) {
 				JOptionPane.showMessageDialog(null, "Connection was refused to destination.\n\n"+server.getIp()+":"+server.getPort(),"Unable to connect to server",JOptionPane.WARNING_MESSAGE);
 				serverConnection.close();
@@ -314,6 +341,8 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 						playerConnection.connect();
 						gameLabel.setText("<html><b>"+gameComboBox.getSelectedItem()+"</b></html>");
 						cardLayout.show(cardPanel, "Connected");
+						trafficImage.setTrafficCounterSource(playerConnection);
+
 					} catch (ConnectException connectException) {
 						JOptionPane.showMessageDialog(null, "Connection was refused port may be bound locally.\n\n"+server.getIp()+":"+server.getPort(),"Unable to listen locally",JOptionPane.WARNING_MESSAGE);
 						playerConnection.close();
@@ -338,6 +367,7 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			trafficImage.setTrafficCounterSource(null);
 			if (serverConnection!=null) {
 				serverConnection.close();
 				serverConnection=null;
@@ -362,9 +392,39 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		}
 		
 	}
+
 	
 	
 	static public void main(String[] args) {
+		try {
+			UIManager.put( "control", new Color(0x1f2833));
+			UIManager.put( "info", new Color(128,128,128) );
+			UIManager.put( "nimbusBase", new Color( 18, 30, 49) );
+			UIManager.put( "nimbusAlertYellow", new Color( 248, 187, 0) );
+			UIManager.put( "nimbusDisabledText", new Color( 128, 128, 128) );
+			UIManager.put( "nimbusFocus", new Color(115,164,209) );
+			UIManager.put( "nimbusGreen", new Color(176,179,50) );
+			UIManager.put( "nimbusInfoBlue", new Color( 66, 139, 221) );
+			UIManager.put( "nimbusLightBackground", new Color( 18, 30, 49) );
+			UIManager.put( "nimbusOrange", new Color(191,98,4) );
+			UIManager.put( "nimbusRed", new Color(169,46,34) );
+			UIManager.put( "nimbusSelectedText", new Color( 255, 255, 255) );
+			UIManager.put( "nimbusSelectionBackground", new Color( 104, 93, 156) );
+			UIManager.put( "text", new Color( 230, 230, 230) );	
+		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		        if ("Nimbus".equals(info.getName())) {
+		            UIManager.setLookAndFeel(info.getClassName());
+		            break;
+		        }
+		    }
+		} catch (Exception e) {
+			try {
+				UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName());
+			} catch (Exception e2) {
+				
+			}
+		}
+		
 		try {
 			File loggingConfigFile=new File("logging.properties");
 		    if (loggingConfigFile.exists()) {
@@ -377,12 +437,6 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 		    System.exit(-1);
 		}
 		
-		try {
-			UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			
-		}
-
 		try {
 			new SocketRelayClient();
 			

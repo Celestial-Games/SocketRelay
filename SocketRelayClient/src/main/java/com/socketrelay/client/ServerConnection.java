@@ -28,7 +28,7 @@ import com.socketrelay.messages.Configuration;
 import com.socketrelay.messages.Data;
 import com.socketrelay.messages.Heartbeat;
 
-public class ServerConnection extends Thread {
+public class ServerConnection extends Thread implements TrafficCounterSource {
 	private static final Logger logger=LoggerFactory.getLogger(ServerConnection.class);
 
 	private Server server;
@@ -40,7 +40,8 @@ public class ServerConnection extends Thread {
 	private IoSession session=null;
 
 	private Map<String,Map<Integer,ClientConnection>> clientsMap=new HashMap<>();
-	private List<ConnectionListener> cConnectionListeners=new ArrayList<>();
+	private Map<String,TrafficCounter> clientsTrafficCounterMap=new HashMap<>();
+	private List<ConnectionListener> connectionListeners=new ArrayList<>();
 
 	public ServerConnection(Server server,Game game){
 		this.server=server;
@@ -48,12 +49,16 @@ public class ServerConnection extends Thread {
 	}
 
 	public void addConnectionListener(ConnectionListener connectionListener) {
-		cConnectionListeners.remove(connectionListener);
-		cConnectionListeners.add(connectionListener);
+		connectionListeners.remove(connectionListener);
+		connectionListeners.add(connectionListener);
 	}
 
 	public void removeConnectionListener(ConnectionListener connectionListener) {
-		cConnectionListeners.remove(connectionListener);
+		connectionListeners.remove(connectionListener);
+	}
+
+	public Map<String,TrafficCounter> getTrafficCounters(){
+		return clientsTrafficCounterMap;
 	}
 
 	public void connect() throws UnknownHostException, IOException, ConnectException {
@@ -147,7 +152,7 @@ public class ServerConnection extends Thread {
 
 	public void processMessage(Configuration message) {
 		configuration=message;
-		for (ConnectionListener configurationListener:cConnectionListeners) {
+		for (ConnectionListener configurationListener:connectionListeners) {
 			configurationListener.receiveConfiguration(server, message);
 		}
 	}
@@ -159,10 +164,11 @@ public class ServerConnection extends Thread {
 				connectionsMap.remove(connectionId);
 				if (connectionsMap.size()==0) {
 					clientsMap.remove(clientId);
+					clientsTrafficCounterMap.remove(clientId);
 				}
 			}
-			sendClientsCount();
 		}
+		sendClientsCount();
 	}
 
 	public void processMessage(Data message) {
@@ -174,16 +180,17 @@ public class ServerConnection extends Thread {
 					if (connectionsMap==null) {
 						connectionsMap=new HashMap<Integer, ClientConnection>();
 						clientsMap.put(message.getClientId(),connectionsMap);
-						sendClientsCount();
+						clientsTrafficCounterMap.put(message.getClientId(),new TrafficCounter(message.getClientId()));
 					}
 				}
 			}
 			
 			ClientConnection clientConnection=connectionsMap.get(message.getConnectionId());
 			if (clientConnection==null) {
-				clientConnection=new ClientConnection(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort());
+				clientConnection=new ClientConnection(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort(),clientsTrafficCounterMap.get(message.getClientId()));
 				connectionsMap.put(message.getConnectionId(),clientConnection);
 			}
+			sendClientsCount();
 			
 			clientConnection.send(message);
 		} catch (IOException e) {
@@ -198,8 +205,16 @@ public class ServerConnection extends Thread {
 	}
 
 	private void sendClientsCount() {
-		for (ConnectionListener configurationListener:cConnectionListeners) {
-			configurationListener.clientConnectedChanged(clientsMap.size());
+		int clients=0;
+		int connections=0;
+		synchronized (clientsMap) {
+			clients=clientsMap.size();
+			for (Map<Integer,ClientConnection> clientConnectionMap:clientsMap.values()) {
+				connections+=clientConnectionMap.size();
+			}
+		}
+		for (ConnectionListener configurationListener:connectionListeners) {
+			configurationListener.clientConnectedChanged(clients,connections);
 		}
 	}
 	
@@ -212,7 +227,7 @@ public class ServerConnection extends Thread {
 	public void close() {
 		logger.info("Connection to server closed.");
 		try {
-			for (ConnectionListener configurationListener:cConnectionListeners) {
+			for (ConnectionListener configurationListener:connectionListeners) {
 				configurationListener.serverConnectedClosed();
 			}
 			for (Map<Integer,ClientConnection> clientConnections:clientsMap.values()) {

@@ -8,7 +8,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +19,7 @@ import com.socketrelay.client.beans.Game;
 import com.socketrelay.client.beans.Server;
 import com.socketrelay.messages.Configuration;
 
-public class PlayerConnection extends Thread {
+public class PlayerConnection extends Thread implements TrafficCounterSource {
 	private static final Logger logger=LoggerFactory.getLogger(PlayerConnection.class);
 
 	private Server server;
@@ -30,13 +32,21 @@ public class PlayerConnection extends Thread {
 	private List<ConnectionListener> cConnectionListeners=new ArrayList<>();
 	
 	private List<Connection> connections=new ArrayList<Connection>();
+	private Map<String,TrafficCounter> trafficCounterMap=new HashMap<>();
+	private TrafficCounter trafficCounter;
 
 	public PlayerConnection(Server server,Game game, int instancePort){
 		this.server=server;
 		this.game=game;
 		this.instancePort=instancePort;
+		trafficCounter=new TrafficCounter("me");
+		trafficCounterMap.put("me",trafficCounter);
 	}
 
+	public Map<String,TrafficCounter> getTrafficCounters(){
+		return trafficCounterMap;
+	}
+	
 	public void addConnectionListener(ConnectionListener connectionListener) {
 		cConnectionListeners.remove(connectionListener);
 		cConnectionListeners.add(connectionListener);
@@ -73,7 +83,7 @@ public class PlayerConnection extends Thread {
 
 	private void sendClientsCount() {
 		for (ConnectionListener configurationListener:cConnectionListeners) {
-			configurationListener.clientConnectedChanged(connections.size());
+			configurationListener.clientConnectedChanged(1, connections.size());
 		}
 	}
 
@@ -133,6 +143,7 @@ public class PlayerConnection extends Thread {
 							} else if (r==-1) {
 								break;
 							}
+							trafficCounter.addBytesCount(r);
 						}
 					} catch (IOException e) {
 						logger.warn(e.getMessage(),e);
@@ -175,6 +186,7 @@ public class PlayerConnection extends Thread {
 					} else if (r==-1) {
 						break;
 					}
+					trafficCounter.addBytesCount(r);
 				}
 			} catch (IOException e) {
 				logger.warn(e.getMessage(),e);

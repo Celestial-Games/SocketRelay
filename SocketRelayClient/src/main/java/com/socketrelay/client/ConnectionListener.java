@@ -5,6 +5,6 @@ import com.socketrelay.messages.Configuration;
 
 public interface ConnectionListener {
 	public void receiveConfiguration(Server server, Configuration configuration);
-	public void clientConnectedChanged(int clients);
+	public void clientConnectedChanged(int clients, int connections);
 	public void serverConnectedClosed();
 }
