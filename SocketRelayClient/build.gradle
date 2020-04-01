@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
     id "edu.sc.seis.launch4j" version "2.4.6"
+	id "de.inetsoftware.setupbuilder" version "4.8.7"
 }
 
 group = 'SocketRelay'
@@ -23,6 +24,7 @@ configurations {
     compile {
         transitive = false
     }
+    izpack
 }
 
 repositories {
@@ -55,25 +57,94 @@ task cleanDest(type: Delete) {
     delete 'build/dest'
 }
 
-task copyTask(type: Copy) {
+task copyTaskWindows(type: Copy) {
     from file('config.json')
-    into file('build/dest/SocketRelayClient')
+    into file('build/dest/win')
+}
+
+task copyTaskRaw(type: Copy) {
+    from file('config.json')
+    from file('icon.ico')
+    from configurations.implementation
+    from jar
+    into file('build/dest/mac')
 }
 
 task createJavaExe(type: edu.sc.seis.launch4j.tasks.Launch4jLibraryTask) {
     outfile = 'SocketRelayClient.exe'
 	mainClassName = 'com.socketrelay.client.SocketRelayClient'
     icon = "${projectDir}/icon.ico"
-    fileDescription = 'The Scoket Relay Client.'
+    fileDescription = 'The Socket Relay Client.'
     jreMinVersion=1.8
-    outputDir="dest/SocketRelayClient"
+    outputDir="dest/win"
 }
 
 task zipClient(type: Zip) {
 	from 'build/dest'
 	include '*'
 	include '*/**'
-	archiveName 'SocketRelayClient.zip'
+	archiveName 'SocketRelayClientW64.zip'
 }
 
-task buildLib(dependsOn: [cleanDest, jar, createJavaExe, copyTask, publishToMavenLocal, zipClient])
+task zipClientRaw(type: Zip) {
+	from 'build/dest'
+	include '*'
+	include '*/**'
+	archiveName 'SocketRelayClientJava.zip'
+}
+
+task buildWindows(dependsOn: [cleanDest, jar, copyTaskWindows, createJavaExe, publishToMavenLocal])
+
+task buildRaw(dependsOn: [cleanDest, jar, copyTaskRaw, zipClientRaw])
+
+setupBuilder {
+    vendor = 'Celestial Games'
+    application = "Socket Relay Client"
+    appIdentifier = "SocketRelayClient"
+    version = '1.0.0'
+    //licenseFile = 'license.txt'
+	mainClass = 'com.socketrelay.client.SocketRelayClient'
+    icons = ['icon.ico']
+    mainJar = 'SocketRelayClient-1.0.0.jar'
+    //depends = "java"
+    //section = "Application/Productivity"
+    
+	desktopStarter {
+	    displayName = "Socket Relay Client" 
+	    description = "Launch the Socket Relay Client"
+	    executable = "SocketRelayClient.exe"
+	    workDir = "."
+	    icons = "icon.ico"
+	    location = "DesktopDir"
+	}
+}
+
+dmg {
+    preferencesLink {
+        title = "Testing Link"
+        action = "echo Hello World"
+    }
+    preferencesLink {
+        title = "Second Testing Link"
+        action = "echo Another World, hello"
+    }
+
+    //depends = "java"
+    //section = "Application/Productivity"
+}
+
+msi {
+    from( 'build/dest/win' ) {
+		include '*'
+		include '*/**'
+    }
+	bannerBmp = "banner.bmp"
+	dialogBmp = "dialog.bmp"
+	installScope = "perMachine"
+	runAfterIsOptional = true
+}
+
+dmg.dependsOn buildRaw
+deb.dependsOn buildRaw
+rpm.dependsOn buildRaw
+msi.dependsOn buildWindows
