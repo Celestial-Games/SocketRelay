@@ -61,7 +61,9 @@ public class HostHandler extends IoHandlerAdapter{
 		portsUsed.remove(session.getAttribute(HostPortAttribute));
 		
 		ServerConnectionThread serverConnectionThread=(ServerConnectionThread)session.getAttribute(HostConnectionThreadAttribute);
-		serverConnectionThread.close();
+		if (serverConnectionThread!=null){
+			serverConnectionThread.close();
+		}
 
 		super.sessionClosed(session);
 	}
