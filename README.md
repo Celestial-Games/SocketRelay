@@ -81,7 +81,7 @@ Client downloads there is an MSI for windows and a plane zip file for linux and 
 
 Clients | Link
 -------- | -------------
-Win64 msi | http://downloads.celestial-games.com/socketrelay/SocketRelayClient-1.0.0.msi
+Win64 msi | http://downloads.celestial-games.com/socketrelay/SocketRelayClient-1.0.0RC1.msi
 Raw Zip | http://downloads.celestial-games.com/socketrelay/SocketRelayClientJava.zip
 
 Server | Link

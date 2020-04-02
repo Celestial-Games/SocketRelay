@@ -69,7 +69,7 @@ vi config.json
 	'serverport': 20000, // The port this server will listen on, this is the port the client connects to.
 	'serverIp': '0.0.0.0', // This is the ip address you want the server to bind to 0.0.0.0 will bind to all available interfaces
 	'clientLow': 20001, // This is the low port to open for player connection.
-	'clientHigh': 20000 // This is the high port to open for player connection.
+	'clientHigh': 21000 // This is the high port to open for player connection.
 }
 ```
 
