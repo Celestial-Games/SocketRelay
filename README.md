@@ -95,4 +95,5 @@ Our preference is to communicate on discord. Please feel free to get in touch he
 # Guides
 
 * [Fantasy Grounds](docs/fantasygrounds.md)
+* [Setting up a server](docs/server.md)
 * [FAQ](docs/faq.md)

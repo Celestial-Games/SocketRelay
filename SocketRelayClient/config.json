@@ -1,8 +1,18 @@
 {
 	"servers":[
 		{
-			"name":"Celestial Cape Town",
-			"ip":"socketrelay.celestial-games.com",
+			"name":"Celestial USA East",
+			"ip":"socketrelay-us-east.celestial-games.com",
+			"port":20000
+		},
+		{
+			"name":"Celestial Switzerland",
+			"ip":"socketrelay-switzerland.celestial-games.com",
+			"port":20000
+		},
+		{
+			"name":"Celestial South Africa",
+			"ip":"socketrelay-rsa.celestial-games.com",
 			"port":20000
 		},
 		{
