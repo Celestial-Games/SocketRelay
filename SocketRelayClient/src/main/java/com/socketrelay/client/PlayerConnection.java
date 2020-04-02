@@ -78,6 +78,14 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 		} catch (IOException e) {
 			logger.error(e.getMessage(),e);
 			close();
+		} finally {
+			if (serverSocket!=null && serverSocket.isBound()) {
+				try {
+					serverSocket.close();
+				} catch (IOException e) {
+					logger.error(e.getMessage(),e);
+				}
+			}
 		}
 	}
 
@@ -90,6 +98,13 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 	public void close() {
 		logger.info("Connection to server closed.");
 		try {
+			if (serverSocket!=null && serverSocket.isBound()) {
+				try {
+					serverSocket.close();
+				} catch (IOException e) {
+					logger.error(e.getMessage(),e);
+				}
+			}
 			for (ConnectionListener configurationListener:cConnectionListeners) {
 				configurationListener.serverConnectedClosed();
 			}
