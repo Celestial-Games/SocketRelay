@@ -11,6 +11,11 @@
 			"port":20000
 		},
 		{
+			"name":"Celestial Australia",
+			"ip":"socketrelay-aus.celestial-games.com",
+			"port":20000
+		},
+		{
 			"name":"Celestial South Africa",
 			"ip":"socketrelay-rsa.celestial-games.com",
 			"port":20000
