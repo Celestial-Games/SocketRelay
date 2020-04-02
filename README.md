@@ -77,10 +77,16 @@ While you can modify this file it's ideal to rather let us know the changes you 
 
 ## Downloads
 
-Download | Link
+Client downloads there is an MSI for windows and a plane zip file for linux and Mac machines. You can of course use the zip file for windows if you choose.
+
+Clients | Link
 -------- | -------------
-Client   | http://downloads.celestial-games.com/socketrelay/SocketRelayClient.zip
-Server   | http://downloads.celestial-games.com/socketrelay/SocketRelayServer.zip
+Win64 msi | http://downloads.celestial-games.com/socketrelay/SocketRelayClient-1.0.0.msi
+Raw Zip | http://downloads.celestial-games.com/socketrelay/SocketRelayClientJava.zip
+
+Server | Link
+-------- | -------------
+Raw Zip  | http://downloads.celestial-games.com/socketrelay/SocketRelayServer.zip
 
 ## Getting in touch
 
