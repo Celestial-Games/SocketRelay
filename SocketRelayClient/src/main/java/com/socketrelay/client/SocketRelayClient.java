@@ -306,6 +306,9 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 			try {
 				serverConnection.connect();
 				gameLabel.setText("<html><b>"+gameComboBox.getSelectedItem()+"</b></html>");
+				connectionLabel.setText("Connecting...");
+				connectionsLabel.setText("0");
+				clientsLabel.setText("0");
 				cardLayout.show(cardPanel, "Connected");
 				
 				trafficImage.setTrafficCounterSource(serverConnection);
@@ -340,6 +343,8 @@ public class SocketRelayClient extends JFrame implements ConnectionListener{
 					try {
 						playerConnection.connect();
 						gameLabel.setText("<html><b>"+gameComboBox.getSelectedItem()+"</b></html>");
+						connectionLabel.setText("Connecting...");
+						connectionsLabel.setText("0");
 						cardLayout.show(cardPanel, "Connected");
 						trafficImage.setTrafficCounterSource(playerConnection);
 
