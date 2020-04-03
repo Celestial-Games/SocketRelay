@@ -78,6 +78,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 
 	public void setTrafficCounterSource(TrafficCounterSource trafficCounterSource) {
 		this.trafficCounterSource = trafficCounterSource;
+		repaint();
 	}
 	
 	private Color getRandomColor() {

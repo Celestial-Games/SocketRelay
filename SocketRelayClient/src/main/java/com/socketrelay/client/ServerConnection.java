@@ -2,9 +2,7 @@ package com.socketrelay.client;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +59,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 		return clientsTrafficCounterMap;
 	}
 
-	public void connect() throws UnknownHostException, IOException, ConnectException {
+	public void connect() {//throws UnknownHostException, IOException, ConnectException {
 		connector = new NioSocketConnector();
 		connector.setConnectTimeoutMillis(20000);
 		connector.getFilterChain().addLast("codes", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
@@ -70,6 +68,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			
 			@Override
 			public void sessionOpened(IoSession session) throws Exception {
+				Notifications.connectedToserver();
 			}
 			
 			@Override
@@ -100,13 +99,14 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			
 			@Override
 			public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
+				close();
 			}
 			
 			@Override
 			public void event(IoSession session, FilterEvent event) throws Exception {
 			}
 		});
-
+		
 		future = connector.connect(new InetSocketAddress(server.getIp(), server.getPort()));
 		start();
 	}
@@ -124,6 +124,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			session=future.getSession();
 			session.getCloseFuture().awaitUninterruptibly();
 		} catch (Exception e) {
+			Notifications.serverRejectedConnection(server.getName(), server.getIp(), server.getPort(), e.getMessage());
 			logger.warn(e.getMessage(),e);
 			close();
 		}
@@ -165,6 +166,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 				if (connectionsMap.size()==0) {
 					clientsMap.remove(clientId);
 					clientsTrafficCounterMap.remove(clientId);
+					Notifications.clientLeft();
 				}
 			}
 		}
@@ -181,6 +183,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 						connectionsMap=new HashMap<Integer, ClientConnection>();
 						clientsMap.put(message.getClientId(),connectionsMap);
 						clientsTrafficCounterMap.put(message.getClientId(),new TrafficCounter(message.getClientId()));
+						Notifications.clientJoined();
 					}
 				}
 			}

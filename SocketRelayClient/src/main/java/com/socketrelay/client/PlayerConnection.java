@@ -3,7 +3,9 @@ package com.socketrelay.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.BindException;
 import java.net.ConnectException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -57,7 +59,12 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 	}
 
 	public void connect() throws UnknownHostException, IOException, ConnectException {
-		serverSocket=new ServerSocket(game.getPort());
+		try {
+			serverSocket=new ServerSocket(game.getPort());
+		} catch (BindException e) {
+			Notifications.unableToBindLocalPort(game.getPort());
+			throw e;
+		}
 		start();
 	}
 
@@ -69,6 +76,9 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 		try {
 			while (serverSocket.isBound() && !serverSocket.isClosed()) {
 				Socket inCommingSocket=serverSocket.accept();
+				if (connections.size()==0) {
+					sendGameConnected();
+				}
 				Connection connection=new Connection(inCommingSocket);
 				synchronized (connections) {
 					connections.add(connection);	
@@ -92,6 +102,12 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 	private void sendClientsCount() {
 		for (ConnectionListener configurationListener:cConnectionListeners) {
 			configurationListener.clientConnectedChanged(1, connections.size());
+		}
+	}
+
+	private void sendGameConnected() {
+		for (ConnectionListener configurationListener:cConnectionListeners) {
+			configurationListener.gameConnected();
 		}
 	}
 
@@ -142,32 +158,38 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 		}
 
 		private void makeOutgoingConnection() throws UnknownHostException, IOException, IllegalArgumentException {
-			outGoingSocket=new Socket(server.getIp(),instancePort);
-			outputInputStream=outGoingSocket.getInputStream();
-			outputOutputStream=outGoingSocket.getOutputStream();
-
-			Thread outgoingThread=new Thread(new Runnable() {
-				@Override
-				public void run() {
-					byte[] buffer=new byte[16*1024];
-					try {
-						while (inCommingSocket.isConnected() && outGoingSocket.isConnected()) {
-							int r=outputInputStream.read(buffer);
-							if (r>0) {
-								inputOutputStream.write(buffer,0,r);
-							} else if (r==-1) {
-								break;
+			try {
+				outGoingSocket=new Socket();
+				outGoingSocket.connect(new InetSocketAddress(server.getIp(),instancePort),2000); 
+				outputInputStream=outGoingSocket.getInputStream();
+				outputOutputStream=outGoingSocket.getOutputStream();
+	
+				Thread outgoingThread=new Thread(new Runnable() {
+					@Override
+					public void run() {
+						byte[] buffer=new byte[16*1024];
+						try {
+							while (inCommingSocket.isConnected() && outGoingSocket.isConnected()) {
+								int r=outputInputStream.read(buffer);
+								if (r>0) {
+									inputOutputStream.write(buffer,0,r);
+								} else if (r==-1) {
+									break;
+								}
+								trafficCounter.addBytesCount(r);
 							}
-							trafficCounter.addBytesCount(r);
+						} catch (IOException e) {
+							logger.warn(e.getMessage(),e);
 						}
-					} catch (IOException e) {
-						logger.warn(e.getMessage(),e);
+						close();
 					}
-					close();
-				}
-			});
-			outgoingThread.setDaemon(true);
-			outgoingThread.start();
+				});
+				outgoingThread.setDaemon(true);
+				outgoingThread.start();
+			} catch (IOException e) {
+				Notifications.serverRejectedConnection(server.getName(), server.getIp(),instancePort, e.getMessage());
+				throw e;
+			}
 		}
 
 		private void close() {

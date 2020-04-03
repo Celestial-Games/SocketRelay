@@ -7,4 +7,5 @@ public interface ConnectionListener {
 	public void receiveConfiguration(Server server, Configuration configuration);
 	public void clientConnectedChanged(int clients, int connections);
 	public void serverConnectedClosed();
+	public void gameConnected();
 }
