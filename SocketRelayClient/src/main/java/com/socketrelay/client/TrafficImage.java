@@ -8,6 +8,7 @@ import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.Rectangle2D;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,40 +22,92 @@ public class TrafficImage extends JPanel implements ActionListener {
 	private static final long serialVersionUID = 1L;
 
 	private static SizeSegmentation[] sizeSegmentations=new SizeSegmentation[]{
-			new SizeSegmentation("256 bps",(int)(256/8)),
-			new SizeSegmentation("512 bps",(int)(512/8)),
-			new SizeSegmentation("768 bps",(int)(768/8)),
-			new SizeSegmentation("1 kbps",(int)(1*1024/8)),
-			new SizeSegmentation("2 kbps",(int)(2*1024/8)),
-			new SizeSegmentation("4 kbps",(int)(4*1024/8)),
-			new SizeSegmentation("8 kbps",(int)(8*1024/8)),
-			new SizeSegmentation("16 kbps",(int)(16*1024/8)),
-			new SizeSegmentation("32 kbps",(int)(32*1024/8)),
-			new SizeSegmentation("48 kbps",(int)(48*1024/8)),
-			new SizeSegmentation("64 kbps",(int)(64*1024/8)),
-			new SizeSegmentation("96 kbps",(int)(96*1024/8)),
-			new SizeSegmentation("128 kbps",(int)(128*1024/8)),
-			new SizeSegmentation("256 kbps",(int)(256*1024/8)),
-			new SizeSegmentation("512 Mbps",(int)(512*1024/8)),
-			new SizeSegmentation("768 Mbps",(int)(768*1024/8)),
-			new SizeSegmentation("1 Mbps",(int)(1024*1024/8)),
-			new SizeSegmentation("2 Mbps",(int)(2*1024*1024/8)),
-			new SizeSegmentation("5 Mbps",(int)(5*1024*1024/8)),
-			new SizeSegmentation("7 Mbps",(int)(7*1024*1024/8)),
-			new SizeSegmentation("10 Mbps",(int)(10*1024*1024/8)),
-			new SizeSegmentation("20 Mbps",(int)(20*1024*1024/8)),
-			new SizeSegmentation("40 Mbps",(int)(40*1024*1024/8)),
-			new SizeSegmentation("50 Mbps",(int)(50*1024*1024/8)),
-			new SizeSegmentation("75 Mbps",(int)(75*1024*1024/8)),
-			new SizeSegmentation("100 Mbps",(int)(100*1024*1024/8)),
-			new SizeSegmentation("120 Mbps",(int)(120*1024*1024/8)),
-			new SizeSegmentation("150 Mbps",(int)(150*1024*1024/8)),
-			new SizeSegmentation("200 Mbps",(int)(200*1024*1024/8)),
-			new SizeSegmentation("300 Mbps",(int)(300*1024*1024/8)),
-			new SizeSegmentation("500 Mbps",(int)(500*1024*1024/8)),
-			new SizeSegmentation("750 Mbps",(int)(750*1024*1024/8)),
-			new SizeSegmentation("1000 Mbps",(int)(1000*1024*1024/8))
+			new SizeSegmentation("256 bps",(int)(256/8),"%.0f bps",1f/8f),
+			new SizeSegmentation("512 bps",(int)(512/8),"%.0f bps",1f/8f),
+			new SizeSegmentation("768 bps",(int)(768/8),"%.0f bps",1f/8f),
+			new SizeSegmentation("1 kbps",(int)(1*1024/8),"%.0f kbps",1024f/8),
+			new SizeSegmentation("2 kbps",(int)(2*1024/8),"%.0f kbps",1024f/8),
+			new SizeSegmentation("4 kbps",(int)(4*1024/8),"%.0f kbps",1024f/8),
+			new SizeSegmentation("8 kbps",(int)(8*1024/8),"%.0f kbps",1024f/8),
+			new SizeSegmentation("16 kbps",(int)(16*1024/8),"%.0f kbps",1024f/8f),
+			new SizeSegmentation("32 kbps",(int)(32*1024/8),"%.0f kbps",1024f/8f),
+			new SizeSegmentation("48 kbps",(int)(48*1024/8),"%.0f kbps",1024f/8f),
+			new SizeSegmentation("64 kbps",(int)(64*1024/8),"%.0f kbps",1024f/8f),
+			new SizeSegmentation("96 kbps",(int)(96*1024/8),"%.0f kbps",1024f/8f),
+			new SizeSegmentation("128 kbps",(int)(128*1024/8),"%.0f kbps",1024f/8f),
+			new SizeSegmentation("256 kbps",(int)(256*1024/8),"%.0f kbps",1024f/8f),
+			new SizeSegmentation("512 kbps",(int)(512*1024/8),"%.0f kbps",1024f/8f),
+			new SizeSegmentation("768 kbps",(int)(768*1024/8),"%.0f kbps",1024f/8f),
+			new SizeSegmentation("1 Mbps",(int)(1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("2 Mbps",(int)(2*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("5 Mbps",(int)(5*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("7 Mbps",(int)(7*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("10 Mbps",(int)(10*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("20 Mbps",(int)(20*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("40 Mbps",(int)(40*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("50 Mbps",(int)(50*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("75 Mbps",(int)(75*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("100 Mbps",(int)(100*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("120 Mbps",(int)(120*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("150 Mbps",(int)(150*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("200 Mbps",(int)(200*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("300 Mbps",(int)(300*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("500 Mbps",(int)(500*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("750 Mbps",(int)(750*1024*1024/8),"%.0f Mbps",1024f*1024f/8f),
+			new SizeSegmentation("1000 Mbps",(int)(1000*1024*1024/8),"%.0f Mbps",1024f*1024f/8f)
 	};
+	
+	enum DataSizeDisplay {
+		Bytes(1024l){
+			public String getSize(long bytes) {
+				return ""+bytes+" bytes";
+			}
+		},
+		KB16(16l*1024l){
+			public String getSize(long bytes) {
+				return String.format("%.2f kb", ((float)bytes)/1024f);
+			}
+		},
+		KB64(64l*1024l){
+			public String getSize(long bytes) {
+				return String.format("%.1f kb", ((float)bytes)/1024f);
+			}
+		},
+		KB(1024l*1024l){
+			public String getSize(long bytes) {
+				return String.format("%.0f kb", ((float)bytes)/1024f);
+			}
+		},
+		MB(1024l*1024l*1024l){
+			public String getSize(long bytes) {
+				return String.format("%.2f mb", ((float)bytes)/1024f/1024f);
+			}
+		},
+		GB(1024l*1024l*1024l*1024l){
+			public String getSize(long bytes) {
+				return String.format("%.2f gb", ((float)bytes)/1024f/1024f/1024f);
+			}
+		};
+		
+		private long maxBytes;
+		
+		DataSizeDisplay(long maxBytes){
+			this.maxBytes=maxBytes;
+		}
+		
+		static DataSizeDisplay getDisplayType(long bytes) {
+			DataSizeDisplay display=GB;
+			for (DataSizeDisplay dataSizeDisplay:DataSizeDisplay.values()) {
+				if (dataSizeDisplay.maxBytes>bytes) {
+					display=dataSizeDisplay;
+					break;
+				}
+			}
+			return display;
+		}
+		
+		abstract public String getSize(long bytes);
+	}
 	
 	private Map<String,Color> allocatedColors=new HashMap<>();
 	private TrafficCounterSource trafficCounterSource=null;
@@ -168,13 +221,16 @@ public class TrafficImage extends JPanel implements ActionListener {
 			
 			sizeSegmentation.paintUnderlay(g2, left, 0, width, height);
 			int maxBytes=0;
+			int current=0;
 			for (int t=0;t<samplesToDraw;t++) {
 				int totalData=0;
 				int lastHeight=0;
+				current=0;
 				for (String client:clients) {
 					int data=dataSet.get(client).getDataUsedPerSecond(t);
 					int currentHeight=sizeSegmentation.getScaled(height,totalData+data);
 					totalData+=data;
+					current+=data;
 					if (totalData>maxBytes) {
 						maxBytes=totalData;
 					}
@@ -185,7 +241,8 @@ public class TrafficImage extends JPanel implements ActionListener {
 					}
 				}
 			}
-			sizeSegmentation.paintOverlay(g2, left, top, width, height, maxBytes);
+			long totalBytes=trafficCounterSource.getTotalBytes();
+			sizeSegmentation.paintOverlay(g2, left, top, width, height, maxBytes, current, DataSizeDisplay.getDisplayType(totalBytes).getSize(totalBytes));
 		}
 	}
 
@@ -194,11 +251,15 @@ public class TrafficImage extends JPanel implements ActionListener {
 	
 	private static class SizeSegmentation {
 		private int maxBytes;
+		private String format;
 		private String description;
+		private float divisor;
 		
-		private SizeSegmentation(String description, int maxBytes) {
+		private SizeSegmentation(String description, int maxBytes, String format, float divisor) {
 			this.maxBytes=maxBytes;
 			this.description=description;
+			this.format=format;
+			this.divisor=divisor;
 		}
 		
 		public boolean canHandle(int bytes) {
@@ -209,11 +270,14 @@ public class TrafficImage extends JPanel implements ActionListener {
 			return (bytes*height)/maxBytes;
 		}
 		
+		private String getFormatted(int speed) {
+			return String.format(format, ((float)speed)/divisor);
+		}
+		
 		public void paintUnderlay(Graphics2D g, int left, int top, int width, int height) {
 		}
 		
-		public void paintOverlay(Graphics2D g, int left, int top, int width, int height, int max) {
-			
+		public void paintOverlay(Graphics2D g, int left, int top, int width, int height, int max, int current,String total) {
 			g.setColor(overlayLowColor);
 			g.drawLine(left, top, left, top+height);
 			g.drawLine(left, top+height, left+width, top+height);
@@ -221,10 +285,24 @@ public class TrafficImage extends JPanel implements ActionListener {
 	        Stroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{9}, 0);
 	        g.setStroke(dashed);
 	        g.drawLine(left, top+height/2, left+width, top+height/2);
-			
-			
+
 			g.setColor(overlayHighColor);
-			g.drawString(description, left+3, top+13);
+	        g.drawString(description, left+3, top+13);
+			
+	        // Draw max
+	        int ypos=height*max/maxBytes;
+	        dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2,4}, 0);
+	        g.setStroke(dashed);
+	        g.drawLine(left, top+height-ypos, left+width, top+height-ypos);
+			g.drawString(getFormatted(max), left+3, top+height-ypos+13);
+
+			Rectangle2D bounds=g.getFontMetrics().getStringBounds(total, g);
+			g.drawString(total, left+width-((int)bounds.getWidth()+width)/2, top+13);
+
+			String currentString="Current "+getFormatted(current);
+			bounds=g.getFontMetrics().getStringBounds(currentString, g);
+			g.drawString(currentString, left+width-(int)bounds.getWidth()-3, top+13);
+
 		}
 		
 	}

@@ -36,7 +36,8 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 	private List<Connection> connections=new ArrayList<Connection>();
 	private Map<String,TrafficCounter> trafficCounterMap=new HashMap<>();
 	private TrafficCounter trafficCounter;
-
+	private long totalBytes=0;
+	
 	public PlayerConnection(Server server,Game game, int instancePort){
 		this.server=server;
 		this.game=game;
@@ -45,6 +46,10 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 		trafficCounterMap.put("me",trafficCounter);
 	}
 
+	public long getTotalBytes() {
+		return totalBytes;
+	}
+	
 	public Map<String,TrafficCounter> getTrafficCounters(){
 		return trafficCounterMap;
 	}
@@ -177,6 +182,7 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 									break;
 								}
 								trafficCounter.addBytesCount(r);
+								totalBytes+=r;
 							}
 						} catch (IOException e) {
 							logger.warn(e.getMessage(),e);
@@ -224,6 +230,7 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 						break;
 					}
 					trafficCounter.addBytesCount(r);
+					totalBytes+=r;
 				}
 			} catch (IOException e) {
 				logger.warn(e.getMessage(),e);

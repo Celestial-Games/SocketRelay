@@ -24,12 +24,14 @@ public class ClientConnection extends Thread {
 	private String clientId;
 	private int connectionId;
 	private TrafficCounter trafficCounter;
+	private ServerConnection serverConnection;
 
-	public ClientConnection(IoSession session, String clientId, int connectionId, String host,int port, TrafficCounter trafficCounter) throws UnknownHostException, IOException {
+	public ClientConnection(IoSession session, String clientId, int connectionId, String host,int port, TrafficCounter trafficCounter, ServerConnection serverConnection) throws UnknownHostException, IOException {
 		this.session=session;
 		this.clientId=clientId;
 		this.connectionId=connectionId;
 		this.trafficCounter=trafficCounter;
+		this.serverConnection=serverConnection;
 		
 		socket=new Socket(host, port);
 		input=socket.getInputStream();
@@ -44,7 +46,9 @@ public class ClientConnection extends Thread {
 			while (socket.isConnected()) {
 				int len=input.read(buffer);
 				if (len>0) {
-					session.write(new Data(clientId, connectionId, Arrays.copyOf(buffer, len)));
+					Data data=new Data(clientId, connectionId, Arrays.copyOf(buffer, len));
+					serverConnection.addToTotalBytes(data);
+					session.write(data);
 					trafficCounter.addBytesCount(len);
 				} else if (len==-1) {
 					break;

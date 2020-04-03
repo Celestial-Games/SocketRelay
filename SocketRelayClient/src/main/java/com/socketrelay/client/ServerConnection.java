@@ -40,6 +40,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 	private Map<String,Map<Integer,ClientConnection>> clientsMap=new HashMap<>();
 	private Map<String,TrafficCounter> clientsTrafficCounterMap=new HashMap<>();
 	private List<ConnectionListener> connectionListeners=new ArrayList<>();
+	private long totalBytes=0;
 
 	public ServerConnection(Server server,Game game){
 		this.server=server;
@@ -55,11 +56,21 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 		connectionListeners.remove(connectionListener);
 	}
 
+	public long getTotalBytes() {
+		return totalBytes;
+	}
+
+	public void addToTotalBytes(Data data) {
+		if (data!=null && data.getData()!=null) {
+			totalBytes+=data.getData().length;
+		}
+	}
+	
 	public Map<String,TrafficCounter> getTrafficCounters(){
 		return clientsTrafficCounterMap;
 	}
 
-	public void connect() {//throws UnknownHostException, IOException, ConnectException {
+	public void connect() {
 		connector = new NioSocketConnector();
 		connector.setConnectTimeoutMillis(20000);
 		connector.getFilterChain().addLast("codes", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
@@ -190,10 +201,12 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			
 			ClientConnection clientConnection=connectionsMap.get(message.getConnectionId());
 			if (clientConnection==null) {
-				clientConnection=new ClientConnection(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort(),clientsTrafficCounterMap.get(message.getClientId()));
+				clientConnection=new ClientConnection(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort(),clientsTrafficCounterMap.get(message.getClientId()),this);
 				connectionsMap.put(message.getConnectionId(),clientConnection);
 			}
 			sendClientsCount();
+
+			addToTotalBytes(message);
 			
 			clientConnection.send(message);
 		} catch (IOException e) {
