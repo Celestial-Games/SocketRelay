@@ -26,16 +26,7 @@ java -jar SocketRelayClient-1.0.0.jar
 
 ### Server configuration
 
-The server configuration is done through a json file called `config.json`.
-
-```js
-{
-	'serverport': 10000, // The port this server will listen on, this is the port the client connects to.
-	'serverIp': '0.0.0.0', // This is the ip address you want the server to bind to 0.0.0.0 will bind to all available interfaces
-	'clientLow': 10001, // This is the low port to open for player connection.
-	'clientHigh': 12000 // This is the high port to open for player connection.
-}
-```
+There is more information on setting up a server [here](docs/server.md). If you are willing to help out by adding a server to the set please get us the details and we can add your server details tot eh system.
 
 ## Client Component
 
@@ -81,7 +72,7 @@ Client downloads there is an MSI for windows and a plane zip file for linux and 
 
 Clients | Link
 -------- | -------------
-Win64 msi | http://downloads.celestial-games.com/socketrelay/SocketRelayClient-1.0.0RC2.msi
+Win64 msi|http://downloads.celestial-games.com/socketrelay/SocketRelayClient-1.0.0RC2.msi
 Raw Zip | http://downloads.celestial-games.com/socketrelay/SocketRelayClientJavaRC2.zip
 
 Server | Link
