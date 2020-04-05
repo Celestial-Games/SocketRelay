@@ -41,6 +41,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 	private Map<String,TrafficCounter> clientsTrafficCounterMap=new HashMap<>();
 	private List<ConnectionListener> connectionListeners=new ArrayList<>();
 	private long totalBytes=0;
+	private boolean closed=false;
 
 	public ServerConnection(Server server,Game game){
 		this.server=server;
@@ -71,6 +72,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 	}
 
 	public void connect() {
+		closed = false;
 		connector = new NioSocketConnector();
 		connector.setConnectTimeoutMillis(20000);
 		connector.getFilterChain().addLast("codes", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
@@ -92,7 +94,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			
 			@Override
 			public void sessionClosed(IoSession session) throws Exception {
-				close();
+				connectionToServerLost();
 			}
 			
 			@Override
@@ -110,14 +112,14 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			
 			@Override
 			public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
-				close();
 			}
 			
 			@Override
 			public void event(IoSession session, FilterEvent event) throws Exception {
 			}
 		});
-		
+		connector.setConnectTimeoutMillis(500);
+		connector.setConnectTimeoutCheckInterval(500);
 		future = connector.connect(new InetSocketAddress(server.getIp(), server.getPort()));
 		start();
 	}
@@ -133,11 +135,10 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 		future.awaitUninterruptibly();
 		try {
 			session=future.getSession();
-			session.getCloseFuture().awaitUninterruptibly();
+			session.getCloseFuture().awaitUninterruptibly(5000);
 		} catch (Exception e) {
 			Notifications.serverRejectedConnection(server.getName(), server.getIp(), server.getPort(), e.getMessage());
 			logger.warn(e.getMessage(),e);
-			close();
 		}
 		connector.dispose();
 	}
@@ -239,18 +240,26 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			removeClientConnection(message.getClientId(),message.getConnectionId());
 		}
 	}
-
-	public void close() {
-		logger.info("Connection to server closed.");
-		try {
+	
+	private void connectionToServerLost() {
+		for (Map<Integer,ClientConnection> clientConnections:clientsMap.values()) {
+			for (ClientConnection clientConnection:clientConnections.values()) {
+				clientConnection.close();
+			}
+		}
+		if (!closed) {
 			for (ConnectionListener configurationListener:connectionListeners) {
 				configurationListener.serverConnectedClosed();
 			}
-			for (Map<Integer,ClientConnection> clientConnections:clientsMap.values()) {
-				for (ClientConnection clientConnection:clientConnections.values()) {
-					clientConnection.close();
-				}
-			}
+			connect();
+		}
+	}
+		
+
+	public void close() {
+		logger.info("Connection to server closed.");
+		closed=true;
+		try {
 			if (session!=null && session.isConnected()) {
 				session.closeNow();
 			}

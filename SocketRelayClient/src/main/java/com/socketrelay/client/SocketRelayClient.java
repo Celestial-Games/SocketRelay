@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.LogManager;
+import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -54,6 +55,8 @@ import com.socketrelay.messages.Configuration;
 public class SocketRelayClient extends JFrame implements ConnectionListener {
 	private static final long serialVersionUID = 1L;
 
+	public static Preferences preferences=Preferences.userNodeForPackage(SocketRelayClient.class);
+	
 	private static final Logger logger = LoggerFactory.getLogger(SocketRelayClient.class);
 	private static final Gson gson = new GsonBuilder().create();
 
@@ -285,10 +288,26 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 	}
 
 	public void serverConnectedClosed() {
-		cardLayout.show(cardPanel, "Connect");
-		trafficImage.setTrafficCounterSource(null);
+//		serverConnection.close();
+		connectServer();
+		connectionLabel.setText("Connecting...");
+		clientConnectedChanged(0, 0);
 	}
 
+	private void connectServer() {
+		Server server = servers.get(serverComboBox.getModel().getSelectedItem().toString());
+		Game game = games.get(gameComboBox.getSelectedItem().toString());
+		serverConnection = new ServerConnection(server, game);
+		serverConnection.addConnectionListener(SocketRelayClient.this);
+		serverConnection.connect();
+		gameLabel.setText("<html><b>" + gameComboBox.getSelectedItem() + "</b></html>");
+		connectionLabel.setText("Connecting...");
+		clientConnectedChanged(0, 0);
+		cardLayout.show(cardPanel, "Connected");
+
+		trafficImage.setTrafficCounterSource(serverConnection);
+	}
+	
 	private JTabbedPane buildLowerPanel() {
 		JTabbedPane tabs = new JTabbedPane(JTabbedPane.BOTTOM);
 
@@ -318,17 +337,7 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent actionEvent) {
-			Server server = servers.get(serverComboBox.getModel().getSelectedItem().toString());
-			Game game = games.get(gameComboBox.getSelectedItem().toString());
-			serverConnection = new ServerConnection(server, game);
-			serverConnection.addConnectionListener(SocketRelayClient.this);
-			serverConnection.connect();
-			gameLabel.setText("<html><b>" + gameComboBox.getSelectedItem() + "</b></html>");
-			connectionLabel.setText("Connecting...");
-			clientConnectedChanged(0, 0);
-			cardLayout.show(cardPanel, "Connected");
-
-			trafficImage.setTrafficCounterSource(serverConnection);
+			connectServer();
 		}
 	}
 
