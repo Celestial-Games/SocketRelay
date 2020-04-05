@@ -5,10 +5,12 @@ import static com.socketrelay.host.Consts.HostPortAttribute;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.mina.core.service.IoHandlerAdapter;
@@ -36,6 +38,8 @@ public class HostHandler extends IoHandlerAdapter{
 		commands.put(Close.class, new CommandClose());
 		commands.put(Data.class, new CommandData());
 	}
+	
+	private Map<Integer,String> portIpMapping=new HashMap<Integer, String>(); 
 	
 	private SocketRelayConfig config;
 	private Set<Integer> portsUsed=new HashSet<>();
@@ -75,11 +79,22 @@ public class HostHandler extends IoHandlerAdapter{
 
 		int port=-1;
 		synchronized (portsUsed) {
+			String ip=(((InetSocketAddress)session.getRemoteAddress()).getAddress()).toString().replace("/","");
 			// TODO: This could be a lot better, cycle through range from start to finish looking for free port explore full range.
 			for (int t=0;t<100;t++) {
 				int portNum=(int)(Math.floor((Math.random()*(config.getClientHigh()-config.getClientLow()+1)+config.getClientLow())));
+				// If this is the first port we exploring lets use the one last used for this IP
+				if (t==0) {
+					for (Entry<Integer, String> entry:portIpMapping.entrySet()) {
+						if (ip.equals(entry.getValue())){
+							portNum=entry.getKey();
+							break;
+						}
+					}
+				}
 				if (!portsUsed.contains(portNum)) {
 					port=portNum;
+					portIpMapping.put(port, ip);
 					break;
 				}
 			}

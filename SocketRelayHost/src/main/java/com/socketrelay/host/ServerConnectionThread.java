@@ -44,6 +44,11 @@ public class ServerConnectionThread extends Thread {
 		for (ClientConnectionThread clientToClose:clientsToClose) {
 			clientToClose.close();
 		}
+		try {
+			serverSocket.close();
+		} catch (IOException e) {
+			logger.warn(e.getMessage(),e);
+		}
 		session.closeNow();
 	}
 
