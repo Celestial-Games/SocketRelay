@@ -242,6 +242,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 	}
 	
 	private void connectionToServerLost() {
+		Notifications.disconnectedFromserver();
 		for (Map<Integer,ClientConnection> clientConnections:clientsMap.values()) {
 			for (ClientConnection clientConnection:clientConnections.values()) {
 				clientConnection.close();

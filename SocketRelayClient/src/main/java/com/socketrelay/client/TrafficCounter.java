@@ -3,8 +3,8 @@ package com.socketrelay.client;
 import java.util.Arrays;
 
 public class TrafficCounter {
-	private static final int SECONDS_PER_SAMPLE=1;
-	private static final int SAMPLES_TO_KEEP=5*60/2/SECONDS_PER_SAMPLE;
+	public static final int SECONDS_PER_SAMPLE=1;
+	public static final int SAMPLES_TO_KEEP=5*60/2/SECONDS_PER_SAMPLE;
 	
 	private String clientId;
 

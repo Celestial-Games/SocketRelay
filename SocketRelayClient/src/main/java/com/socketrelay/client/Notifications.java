@@ -21,9 +21,18 @@ import javax.swing.border.BevelBorder;
 public class Notifications {
 	private static final List<Notification> notifications=new ArrayList<>();
 	
+	public enum EventType{
+		ClientJoined,
+		ClientLeft,
+		ConnectedToServer,
+		ConnectedToServerLost
+	}
+	
 	private static Timer timer;
 	
 	private static SocketRelayClient mainFrame;
+	private static List<Event> events=new ArrayList<Event>();
+	private static Event[] eventsArray=null;
 	
 	public static void init(SocketRelayClient main) {
 		mainFrame=main;
@@ -94,16 +103,62 @@ public class Notifications {
 	
 	public static void clientJoined() {
 		new Notification("<html>Player has connected from the Socket Relay.</html>");
+		addEvent(EventType.ClientJoined);
 	}
 	
 	public static void clientLeft() {
 		new Notification("<html>Player has disconnected from the Socket Relay.</html>");
+		addEvent(EventType.ClientLeft);
 	}
 
 	public static void connectedToserver() {
 		new Notification("<html>Connection to the server established.</html>");
+		addEvent(EventType.ConnectedToServer);
+	}
+	
+	public static void disconnectedFromserver() {
+		new Notification("<html>Disconnected from the server established.</html>");
+		addEvent(EventType.ConnectedToServerLost);
+	}
+	
+	public static Event[] getEvents() {
+		if (eventsArray==null) {
+			synchronized (events) {
+				eventsArray=events.toArray(new Event[events.size()]);
+			}
+		}
+		return eventsArray;
 	}
 
+	public static void addEvent(EventType eventType) {
+		synchronized (events) {
+			eventsArray=null;
+			events.add(new Event(eventType));
+			if (events.size()>1000) {
+				events.remove(0);
+			}
+		}
+	}
+
+	static class Event {
+		private EventType eventType;
+		private long timeStamp;
+		
+		public Event(EventType eventType) {
+			super();
+			this.eventType = eventType;
+			this.timeStamp = System.currentTimeMillis();
+		}
+
+		public EventType getEventType() {
+			return eventType;
+		}
+
+		public long getTimeStamp() {
+			return timeStamp;
+		}
+	}
+	
 	static class Notification {
 		private String description;
 		private long showTime;

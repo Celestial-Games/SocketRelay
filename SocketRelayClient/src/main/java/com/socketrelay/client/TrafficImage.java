@@ -16,6 +16,7 @@ import java.util.Map;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import com.socketrelay.client.Notifications.Event;
 import com.socketrelay.client.TrafficCounter.TrafficBuffer;
 
 public class TrafficImage extends JPanel implements ActionListener {
@@ -229,7 +230,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 			int left=(getWidth()-(width-1))/2;
 			
 			int top=4;
-			int height=getHeight()-8;
+			int height=getHeight()-24;
 			
 			sizeSegmentation.paintUnderlay(g2, left, 0, width, height);
 			int current=0;
@@ -251,6 +252,50 @@ public class TrafficImage extends JPanel implements ActionListener {
 			}
 			long totalBytes=trafficCounterSource.getTotalBytes();
 			sizeSegmentation.paintOverlay(g2, left, top, width, height, max, (int)average, current, DataSizeDisplay.getDisplayType(totalBytes).getSize(totalBytes));
+			
+			
+			Event[] events=Notifications.getEvents();
+			int lastPos=-1;
+			int y=0;
+			for (int t=events.length-1;t>=0;t--) {
+				Event event=events[t];
+				int p=samplesToDraw-((int)(System.currentTimeMillis()-event.getTimeStamp()))/(TrafficCounter.SECONDS_PER_SAMPLE*1000);
+				
+				if (lastPos!=p) {
+					lastPos=p;
+					y=top+height+3;
+				}
+				
+				if (p>=0) {
+					int w=itemWidth/2;
+					int x=p*itemWidth+left+w;
+					int yo=0;
+					String draw="";
+					switch (event.getEventType()) {
+					case ClientJoined:
+						g2.setColor(Color.yellow);
+						draw="+";
+						break;
+					case ClientLeft:
+						g2.setColor(Color.yellow);
+						draw="-";
+						break;
+					case ConnectedToServer:
+						g2.setColor(Color.cyan);
+						draw="+";
+						break;
+					case ConnectedToServerLost:
+						g2.setColor(Color.cyan);
+						draw="-";
+						break;
+					}
+					Rectangle2D bounds=g.getFontMetrics().getStringBounds(draw, g);
+			        g2.drawString(draw, (int)(x-bounds.getWidth()), y+7+("-".equals(draw)?-1:0));
+			        y+=6;
+				} else {
+					break;
+				}
+			}
 		}
 	}
 
