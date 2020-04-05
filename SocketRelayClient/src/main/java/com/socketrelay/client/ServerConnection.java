@@ -130,8 +130,6 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 
 	public void run() {
 		sendClientsCount();
-
-		NioSocketConnector connector = new NioSocketConnector();
 		future.awaitUninterruptibly();
 		try {
 			session=future.getSession();

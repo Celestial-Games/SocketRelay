@@ -31,22 +31,20 @@ import com.socketrelay.messages.Data;
 public class HostHandler extends IoHandlerAdapter{
 	private static final Logger logger=LoggerFactory.getLogger(HostHandler.class);
 
-	private static Map<Class<? extends Serializable>,Command<? extends Serializable>> commands=new HashMap<>();
-	
-	static {
-		commands.put(ClientClose.class, new CommandClientClose());
-		commands.put(Close.class, new CommandClose());
-		commands.put(Data.class, new CommandData());
-	}
+	private Map<Class<? extends Serializable>,Command<? extends Serializable>> commands=new HashMap<>();
 	
 	private Map<Integer,String> portIpMapping=new HashMap<Integer, String>(); 
 	
 	private SocketRelayConfig config;
 	private Set<Integer> portsUsed=new HashSet<>();
 	
-	public HostHandler(SocketRelayConfig config, Set<Integer> portsUsed) {
+	public HostHandler(SocketRelayHost socketRelayHost, SocketRelayConfig config, Set<Integer> portsUsed) {
 		this.config=config;
 		this.portsUsed=portsUsed;
+		
+		commands.put(ClientClose.class, new CommandClientClose());
+		commands.put(Close.class, new CommandClose());
+		commands.put(Data.class, new CommandData());
 	}
 	
 	@Override

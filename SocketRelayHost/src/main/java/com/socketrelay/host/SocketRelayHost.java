@@ -31,6 +31,7 @@ public class SocketRelayHost {
 	
 	private SocketRelayConfig config=new SocketRelayConfig(); 
 	private Set<Integer> portsUsed=Collections.synchronizedSet(new HashSet<>());
+	private NioSocketAcceptor acceptor; 
 	
 	private SocketRelayHost() throws IOException {
 		loadConfig();
@@ -44,7 +45,7 @@ public class SocketRelayHost {
 	}
 
 	private void start() throws Exception {
-		NioSocketAcceptor acceptor=new NioSocketAcceptor(); 
+		acceptor=new NioSocketAcceptor(); 
 		acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
         
         KeepAliveMessageFactory keepAliveMessageFactory = new KeepAliveHeartbeatMessageFactory();
@@ -52,7 +53,7 @@ public class SocketRelayHost {
         keepAliveFilter.setForwardEvent(true);
         acceptor.getFilterChain().addLast("heart", keepAliveFilter);
         
-        HostHandler hostHandler=new HostHandler(config,portsUsed);
+        HostHandler hostHandler=new HostHandler(this,config,portsUsed);
         acceptor.setHandler(hostHandler);
         acceptor.getSessionConfig().setMaxReadBufferSize(1024*1024);
         acceptor.getSessionConfig().setReadBufferSize(1024);
@@ -60,9 +61,14 @@ public class SocketRelayHost {
 
         InetSocketAddress inetSocketAddress=new InetSocketAddress(config.getServerIp(), config.getServerport());
         
-		acceptor.bind(inetSocketAddress);		
+		acceptor.bind(inetSocketAddress);
 	}
-	
+
+	public void close() {
+		acceptor.dispose();
+		System.exit(0);
+	}
+
 	enum Argument {
 		Start("start","Start the SocketRelay."){
 			public void executeArgument(String parts) throws Exception{
@@ -70,20 +76,15 @@ public class SocketRelayHost {
 				socketRelayHost.start();
 			}
 		},
-		Status("status","Get the status of the currently running socket relay."){
-			public void executeArgument(String parts) throws Exception{
-				// TODO: Get status and report here
-			}
-		},
-		Shutdown("stop","Shutdown the currently running socket relay."){
-			public void executeArgument(String parts) throws Exception{
-				// TODO: Connect via port and instruct to shutdown.
-			}
-		},
 		Loop("loop","{port} Starts a loop socket listener on this port."){
 			public int processArgument(Map<Argument,String> arguments,String[] args, int pos) {
-				// TODO: If there are no more params or the next one is not a number log error and show help
-				
+				if (args.length<pos+1) {
+					try {
+						Help.executeArgument("");
+					} catch (Exception e) {
+					}
+					System.exit(-1);
+				}
 				arguments.put(this,args[pos+1]);
 				return pos+1;
 			}
@@ -145,7 +146,7 @@ public class SocketRelayHost {
 		
 		return arguments.size()>0;
 	}
-	
+
 	public static void main(String[] args) {
 		try {
 			if (!getArguments(args)) {
@@ -154,6 +155,7 @@ public class SocketRelayHost {
 			}
 		} catch (Exception e) {
 			logger.error("Unable to start SocketRelay server.",e);
+			System.exit(-1);
 		}
 		
 	}
