@@ -187,18 +187,31 @@ public class TrafficImage extends JPanel implements ActionListener {
 			Map<String,TrafficBuffer> dataSet=new HashMap<>();
 			String[] clients=null;
 			
-			int max=0;
 			synchronized (trafficCounters) {
 				clients=new String[trafficCounters.size()];
 				int c=0;
 				for (TrafficCounter trafficCounter:trafficCounters.values()) {
 					clients[c++]=trafficCounter.getClientId();
 					dataSet.put(trafficCounter.getClientId(), trafficCounter.getTraffic());
-					if (max<trafficCounter.getCurrentMax()) {
-						max=trafficCounter.getCurrentMax();
+				}
+			}
+			
+			// Calculate max and average
+			int samplesToDraw=TrafficCounter.getMaxSamples()-1;
+			int max=0;
+			long average=0;
+			for (int t=0;t<samplesToDraw;t++) {
+				int totalData=0;
+				for (String client:clients) {
+					int data=dataSet.get(client).getDataUsedPerSecond(t);
+					totalData+=data;
+					average+=data;
+					if (totalData>max) {
+						max=totalData;
 					}
 				}
 			}
+			average/=samplesToDraw;
 
 			// Find range
 			SizeSegmentation sizeSegmentation=sizeSegmentations[sizeSegmentations.length-1];
@@ -211,7 +224,6 @@ public class TrafficImage extends JPanel implements ActionListener {
 			
 			Arrays.sort(clients);
 			
-			int samplesToDraw=TrafficCounter.getMaxSamples()-1;
 			int itemWidth=(getWidth()/samplesToDraw);
 			int width=itemWidth*samplesToDraw;
 			int left=(getWidth()-(width-1))/2;
@@ -220,7 +232,6 @@ public class TrafficImage extends JPanel implements ActionListener {
 			int height=getHeight()-8;
 			
 			sizeSegmentation.paintUnderlay(g2, left, 0, width, height);
-			int maxBytes=0;
 			int current=0;
 			for (int t=0;t<samplesToDraw;t++) {
 				int totalData=0;
@@ -231,9 +242,6 @@ public class TrafficImage extends JPanel implements ActionListener {
 					int currentHeight=sizeSegmentation.getScaled(height,totalData+data);
 					totalData+=data;
 					current+=data;
-					if (totalData>maxBytes) {
-						maxBytes=totalData;
-					}
 					if (currentHeight>lastHeight) {
 						g2.setColor(getColor(client));
 						g2.fillRect(t*itemWidth+left, top+height-currentHeight, itemWidth-1, currentHeight-lastHeight);
@@ -242,7 +250,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 				}
 			}
 			long totalBytes=trafficCounterSource.getTotalBytes();
-			sizeSegmentation.paintOverlay(g2, left, top, width, height, maxBytes, current, DataSizeDisplay.getDisplayType(totalBytes).getSize(totalBytes));
+			sizeSegmentation.paintOverlay(g2, left, top, width, height, max, (int)average, current, DataSizeDisplay.getDisplayType(totalBytes).getSize(totalBytes));
 		}
 	}
 
@@ -277,7 +285,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 		public void paintUnderlay(Graphics2D g, int left, int top, int width, int height) {
 		}
 		
-		public void paintOverlay(Graphics2D g, int left, int top, int width, int height, int max, int current,String total) {
+		public void paintOverlay(Graphics2D g, int left, int top, int width, int height, int max, int average, int current,String total) {
 			g.setColor(overlayLowColor);
 			g.drawLine(left, top, left, top+height);
 			g.drawLine(left, top+height, left+width, top+height);
@@ -296,13 +304,47 @@ public class TrafficImage extends JPanel implements ActionListener {
 	        g.drawLine(left, top+height-ypos, left+width, top+height-ypos);
 	        String maxString=getFormatted(max);
 			Rectangle2D bounds=g.getFontMetrics().getStringBounds(maxString, g);
-			g.drawString(maxString, left+3+width/4+(int)(bounds.getWidth()/2), top+height-ypos+13);
+			g.setColor(Color.black);
+			g.drawString(maxString, left+3+width/4-(int)(bounds.getWidth()/2)-1, top+height-ypos+13);
+			g.drawString(maxString, +left+3+width/4-(int)(bounds.getWidth()/2)+1, top+height-ypos+13);
+			g.drawString(maxString, left+3+width/4-(int)(bounds.getWidth()/2), top+height-ypos+13-1);
+			g.drawString(maxString, left+3+width/4-(int)(bounds.getWidth()/2), top+height-ypos+13+1);
+			g.setColor(overlayHighColor);
+			g.drawString(maxString, left+3+width/4-(int)(bounds.getWidth()/2), top+height-ypos+13);
 
+	        // Draw average
+	        ypos=height*average/maxBytes;
+	        dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{1,4}, 0);
+	        g.setStroke(dashed);
+	        g.drawLine(left, top+height-ypos, left+width, top+height-ypos);
+	        String aveString=getFormatted(average);
+			bounds=g.getFontMetrics().getStringBounds(maxString, g);
+			g.setColor(Color.black);
+			g.drawString(aveString, left+3+width*3/4-(int)(bounds.getWidth()/2)-1, top+height-ypos-5);
+			g.drawString(aveString, +left+3+width*3/4-(int)(bounds.getWidth()/2)+1, top+height-ypos-5);
+			g.drawString(aveString, left+3+width*3/4-(int)(bounds.getWidth()/2), top+height-ypos-5-1);
+			g.drawString(aveString, left+3+width*3/4-(int)(bounds.getWidth()/2), top+height-ypos-5+1);
+			g.setColor(overlayHighColor);
+			g.drawString(aveString, left+3+width*3/4-(int)(bounds.getWidth()/2), top+height-ypos-5);
+
+			
 			bounds=g.getFontMetrics().getStringBounds(total, g);
+			g.setColor(Color.black);
+			g.drawString(total, left+width-((int)bounds.getWidth()+width)/2+1, top+13);
+			g.drawString(total, left+width-((int)bounds.getWidth()+width)/2-1, top+13);
+			g.drawString(total, left+width-((int)bounds.getWidth()+width)/2, top+13+1);
+			g.drawString(total, left+width-((int)bounds.getWidth()+width)/2, top+13-1);
+			g.setColor(overlayHighColor);
 			g.drawString(total, left+width-((int)bounds.getWidth()+width)/2, top+13);
 
 			String currentString="Current "+getFormatted(current);
 			bounds=g.getFontMetrics().getStringBounds(currentString, g);
+			g.setColor(Color.black);
+			g.drawString(currentString, left+width-(int)bounds.getWidth()-3+1, top+13);
+			g.drawString(currentString, left+width-(int)bounds.getWidth()-3-1, top+13);
+			g.drawString(currentString, left+width-(int)bounds.getWidth()-3, top+13+1);
+			g.drawString(currentString, left+width-(int)bounds.getWidth()-3, top+13-1);
+			g.setColor(overlayHighColor);
 			g.drawString(currentString, left+width-(int)bounds.getWidth()-3, top+13);
 
 		}
