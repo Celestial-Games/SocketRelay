@@ -168,7 +168,7 @@ public class PlayerConnection extends Thread implements TrafficCounterSource {
 				outGoingSocket.connect(new InetSocketAddress(server.getIp(),instancePort),2000); 
 				outputInputStream=outGoingSocket.getInputStream();
 				outputOutputStream=outGoingSocket.getOutputStream();
-	
+				outGoingSocket.setSoTimeout(0);
 				Thread outgoingThread=new Thread(new Runnable() {
 					@Override
 					public void run() {
