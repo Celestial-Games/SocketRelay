@@ -56,6 +56,8 @@ public class ClientConnection extends Thread {
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(),e);
+		} finally {
+			serverConnection.removeClientConnection(clientId, connectionId);
 		}
 		session.write(new ClientClose(clientId,connectionId));
 	}

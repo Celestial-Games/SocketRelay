@@ -169,7 +169,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 		}
 	}
 	
-	private void removeClientConnection(String clientId, int connectionId) {
+	public void removeClientConnection(String clientId, int connectionId) {
 		Map<Integer,ClientConnection> connectionsMap=clientsMap.get(clientId);
 		if (connectionsMap!=null) {
 			synchronized (connectionsMap) {
