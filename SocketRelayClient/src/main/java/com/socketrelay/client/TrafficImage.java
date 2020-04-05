@@ -236,7 +236,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 					}
 					if (currentHeight>lastHeight) {
 						g2.setColor(getColor(client));
-						g2.fillRect(t*itemWidth+left, top+height-1-currentHeight, itemWidth-1, currentHeight-lastHeight);
+						g2.fillRect(t*itemWidth+left, top+height-currentHeight, itemWidth-1, currentHeight-lastHeight);
 						lastHeight=currentHeight;
 					}
 				}
@@ -294,9 +294,11 @@ public class TrafficImage extends JPanel implements ActionListener {
 	        dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2,4}, 0);
 	        g.setStroke(dashed);
 	        g.drawLine(left, top+height-ypos, left+width, top+height-ypos);
-			g.drawString(getFormatted(max), left+3, top+height-ypos+13);
+	        String maxString=getFormatted(max);
+			Rectangle2D bounds=g.getFontMetrics().getStringBounds(maxString, g);
+			g.drawString(maxString, left+3+width/4+(int)(bounds.getWidth()/2), top+height-ypos+13);
 
-			Rectangle2D bounds=g.getFontMetrics().getStringBounds(total, g);
+			bounds=g.getFontMetrics().getStringBounds(total, g);
 			g.drawString(total, left+width-((int)bounds.getWidth()+width)/2, top+13);
 
 			String currentString="Current "+getFormatted(current);
