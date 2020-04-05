@@ -269,7 +269,6 @@ public class TrafficImage extends JPanel implements ActionListener {
 				if (p>=0) {
 					int w=itemWidth/2;
 					int x=p*itemWidth+left+w;
-					int yo=0;
 					String draw="";
 					switch (event.getEventType()) {
 					case ClientJoined:
