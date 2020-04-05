@@ -130,7 +130,6 @@ public class Notifications {
 
 		private void reposition() {
 			int index=notifications.indexOf(this);
-			System.out.println("index="+index);
 			Point bottomRight=mainFrame.getBottomRightCornerOffset(-dialog.getWidth()-5,-((index+1)*(dialog.getHeight()+5)));
 			dialog.setLocation(bottomRight);
 		}
