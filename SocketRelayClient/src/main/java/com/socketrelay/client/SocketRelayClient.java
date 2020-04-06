@@ -288,7 +288,6 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 	}
 
 	public void serverConnectedClosed() {
-//		serverConnection.close();
 		connectServer();
 		connectionLabel.setText("Connecting...");
 		clientConnectedChanged(0, 0);
@@ -407,6 +406,7 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 				playerConnection.close();
 				playerConnection = null;
 			}
+			cardLayout.show(cardPanel, "Connect");
 		}
 
 	}

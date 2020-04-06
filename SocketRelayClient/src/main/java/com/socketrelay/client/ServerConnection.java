@@ -133,7 +133,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 		future.awaitUninterruptibly();
 		try {
 			session=future.getSession();
-			session.getCloseFuture().awaitUninterruptibly(5000);
+			session.getCloseFuture().awaitUninterruptibly();
 		} catch (Exception e) {
 			Notifications.serverRejectedConnection(server.getName(), server.getIp(), server.getPort(), e.getMessage());
 			logger.warn(e.getMessage(),e);
