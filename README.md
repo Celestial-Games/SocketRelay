@@ -77,7 +77,7 @@ Raw Zip | http://downloads.celestial-games.com/socketrelay/SocketRelayClientJava
 
 Server | Link
 -------- | -------------
-Raw Zip  | http://downloads.celestial-games.com/socketrelay/SocketRelayServer.zip
+Raw Zip  | http://downloads.celestial-games.com/socketrelay/SocketRelayServerRC3.zip
 
 ## Getting in touch
 
