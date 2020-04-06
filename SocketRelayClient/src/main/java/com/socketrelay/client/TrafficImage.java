@@ -109,7 +109,10 @@ public class TrafficImage extends JPanel implements ActionListener {
 		
 		abstract public String getSize(long bytes);
 	}
-	
+
+	private static Color overlayLowColor=new Color(0x45a29e);
+	private static Color overlayHighColor=new Color(0x66fcf1);
+
 	private Map<String,Color> allocatedColors=new HashMap<>();
 	private TrafficCounterSource trafficCounterSource=null;
 	
@@ -119,6 +122,8 @@ public class TrafficImage extends JPanel implements ActionListener {
 		timer=new Timer(1000*TrafficCounter.getSecondsPerSample(),this);
 		timer.setRepeats(true);
 		timer.start();
+		allocatedColors.put("overlayLowColor", overlayLowColor);
+		allocatedColors.put("overlayHighColor", overlayHighColor);
 	}
 
 	@Override
@@ -297,9 +302,6 @@ public class TrafficImage extends JPanel implements ActionListener {
 			}
 		}
 	}
-
-	private static Color overlayLowColor=new Color(0x45a29e);
-	private static Color overlayHighColor=new Color(0x66fcf1);
 	
 	private static class SizeSegmentation {
 		private int maxBytes;
