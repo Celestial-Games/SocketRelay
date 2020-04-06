@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.LogManager;
-import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -54,8 +53,6 @@ import com.socketrelay.messages.Configuration;
 
 public class SocketRelayClient extends JFrame implements ConnectionListener {
 	private static final long serialVersionUID = 1L;
-
-	public static Preferences preferences=Preferences.userNodeForPackage(SocketRelayClient.class);
 	
 	private static final Logger logger = LoggerFactory.getLogger(SocketRelayClient.class);
 	private static final Gson gson = new GsonBuilder().create();

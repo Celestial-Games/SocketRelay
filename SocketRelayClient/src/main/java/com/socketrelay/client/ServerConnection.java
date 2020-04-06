@@ -200,7 +200,7 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			
 			ClientConnection clientConnection=connectionsMap.get(message.getConnectionId());
 			if (clientConnection==null) {
-				clientConnection=new ClientConnection(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort(),clientsTrafficCounterMap.get(message.getClientId()),this);
+				clientConnection=new ClientConnectionTcp(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort(),clientsTrafficCounterMap.get(message.getClientId()),this);
 				connectionsMap.put(message.getConnectionId(),clientConnection);
 			}
 			sendClientsCount();
