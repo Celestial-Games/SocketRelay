@@ -220,10 +220,17 @@ public class TrafficImage extends JPanel implements ActionListener {
 			average/=samplesToDraw;
 
 			// Find range
-			SizeSegmentation sizeSegmentation=sizeSegmentations[sizeSegmentations.length-1];
+			SizeSegmentation sizeSegmentationMax=sizeSegmentations[sizeSegmentations.length-1];
 			for (SizeSegmentation ss:sizeSegmentations) {
 				if (ss.canHandle(max)) {
-					sizeSegmentation=ss;
+					sizeSegmentationMax=ss;
+					break;
+				}
+			}
+			SizeSegmentation sizeSegmentationAve=sizeSegmentations[sizeSegmentations.length-1];
+			for (SizeSegmentation ss:sizeSegmentations) {
+				if (ss.canHandle((int)average)) {
+					sizeSegmentationAve=ss;
 					break;
 				}
 			}
@@ -237,7 +244,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 			int top=4;
 			int height=getHeight()-24;
 			
-			sizeSegmentation.paintUnderlay(g2, left, 0, width, height);
+			sizeSegmentationMax.paintUnderlay(g2, left, 0, width, height);
 			int current=0;
 			for (int t=0;t<samplesToDraw;t++) {
 				int totalData=0;
@@ -245,7 +252,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 				current=0;
 				for (String client:clients) {
 					int data=dataSet.get(client).getDataUsedPerSecond(t);
-					int currentHeight=sizeSegmentation.getScaled(height,totalData+data);
+					int currentHeight=sizeSegmentationMax.getScaled(height,totalData+data);
 					totalData+=data;
 					current+=data;
 					if (currentHeight>lastHeight) {
@@ -256,7 +263,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 				}
 			}
 			long totalBytes=trafficCounterSource.getTotalBytes();
-			sizeSegmentation.paintOverlay(g2, left, top, width, height, max, (int)average, current, DataSizeDisplay.getDisplayType(totalBytes).getSize(totalBytes));
+			sizeSegmentationMax.paintOverlay(g2, left, top, width, height, max, (int)average, current, DataSizeDisplay.getDisplayType(totalBytes).getSize(totalBytes),sizeSegmentationAve);
 			
 			
 			Event[] events=Notifications.getEvents();
@@ -331,7 +338,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 		public void paintUnderlay(Graphics2D g, int left, int top, int width, int height) {
 		}
 		
-		public void paintOverlay(Graphics2D g, int left, int top, int width, int height, int max, int average, int current,String total) {
+		public void paintOverlay(Graphics2D g, int left, int top, int width, int height, int max, int average, int current,String total, SizeSegmentation aveSizeSegmentation) {
 			g.setColor(overlayLowColor);
 			g.drawLine(left, top, left, top+height);
 			g.drawLine(left, top+height, left+width, top+height);
@@ -363,7 +370,7 @@ public class TrafficImage extends JPanel implements ActionListener {
 	        dashed = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{1,4}, 0);
 	        g.setStroke(dashed);
 	        g.drawLine(left, top+height-ypos, left+width, top+height-ypos);
-	        String aveString=getFormatted(average);
+	        String aveString=aveSizeSegmentation.getFormatted(average);
 			bounds=g.getFontMetrics().getStringBounds(maxString, g);
 			g.setColor(Color.black);
 			g.drawString(aveString, left+3+width*3/4-(int)(bounds.getWidth()/2)-1, top+height-ypos-5);
