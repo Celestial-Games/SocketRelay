@@ -200,7 +200,14 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			
 			ClientConnection clientConnection=connectionsMap.get(message.getConnectionId());
 			if (clientConnection==null) {
-				clientConnection=new ClientConnectionTcp(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort(),clientsTrafficCounterMap.get(message.getClientId()),this);
+				switch (game.getProtocol()) {
+				case TCP:
+					clientConnection=new ClientConnectionTcp(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort(),clientsTrafficCounterMap.get(message.getClientId()),this);
+					break;
+				case UDP:
+					clientConnection=new ClientConnectionUdp(session, message.getClientId(), message.getConnectionId(), "localhost", game.getPort(),clientsTrafficCounterMap.get(message.getClientId()),this);
+					break;
+				}
 				connectionsMap.put(message.getConnectionId(),clientConnection);
 			}
 			sendClientsCount();
