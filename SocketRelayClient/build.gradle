@@ -39,6 +39,8 @@ dependencies {
 	implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
 	implementation group: 'org.slf4j', name: 'slf4j-jdk14', version: '1.7.30'
 	implementation group: 'org.apache.mina', name: 'mina-core', version: '2.1.3'
+
+	implementation group: 'com.playfab', name: 'client-sdk', version: '0.107.200330'
 }
 
 project.configurations.implementation.setCanBeResolved(true)

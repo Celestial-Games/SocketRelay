@@ -22,10 +22,10 @@ public class ClientConnectionThread extends Thread {
 	private IoSession session;
 	private String clientId;
 	private int connectionId;
-	private ServerConnectionThread parent;
+	private ServerConnectionThreadTcp parent;
 	
 	// TODO: using ServerConnectionThread as parent here is ugly. Needs a refactor.
-	public ClientConnectionThread(ServerConnectionThread parent, String clientId, int connectionId, IoSession session, Socket socket) throws IOException{
+	public ClientConnectionThread(ServerConnectionThreadTcp parent, String clientId, int connectionId, IoSession session, Socket socket) throws IOException{
 		this.parent=parent;
 		this.clientId=clientId;
 		this.connectionId=connectionId;

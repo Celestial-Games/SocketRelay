@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.socketrelay.messages.Data;
 
-public class ServerConnectionThread extends Thread {
-	private static final Logger logger=LoggerFactory.getLogger(ServerConnectionThread.class);
+public class ServerConnectionThreadTcp extends Thread {
+	private static final Logger logger=LoggerFactory.getLogger(ServerConnectionThreadTcp.class);
 	
 	private ServerSocket serverSocket;
 	private IoSession session;
@@ -24,7 +24,7 @@ public class ServerConnectionThread extends Thread {
 
 	private int nextClientId=1;
 	
-	public ServerConnectionThread(IoSession session, ServerSocket serverSocket) throws IOException{
+	public ServerConnectionThreadTcp(IoSession session, ServerSocket serverSocket) throws IOException{
 		this.serverSocket=serverSocket;
 		this.session=session;
 		setDaemon(true);

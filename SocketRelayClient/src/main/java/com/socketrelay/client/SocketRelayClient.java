@@ -83,7 +83,7 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 	public SocketRelayClient() throws FileNotFoundException, IOException {
 		super("Socket Relay");
 
-		loadIcons();
+		setIconImages(Images.getIcons());
 
 		loadDetails();
 
@@ -98,18 +98,6 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 		setLocationRelativeTo(null);
 
 		setVisible(true);
-	}
-
-	private void loadIcons() throws IOException {
-		List<Image> icons = new ArrayList<>();
-		icons.add(ImageIO.read(ClassLoader.getSystemResourceAsStream("images/icon16.png")));
-		icons.add(ImageIO.read(ClassLoader.getSystemResourceAsStream("images/icon24.png")));
-		icons.add(ImageIO.read(ClassLoader.getSystemResourceAsStream("images/icon32.png")));
-		icons.add(ImageIO.read(ClassLoader.getSystemResourceAsStream("images/icon48.png")));
-		icons.add(ImageIO.read(ClassLoader.getSystemResourceAsStream("images/icon64.png")));
-		icons.add(ImageIO.read(ClassLoader.getSystemResourceAsStream("images/icon128.png")));
-		icons.add(ImageIO.read(ClassLoader.getSystemResourceAsStream("images/icon256.png")));
-		setIconImages(icons);
 	}
 
 	public Point getBottomRightCornerOffset(int xoffset, int yoffset) {
@@ -354,7 +342,12 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 					Server server = servers.get(serverComboBox.getModel().getSelectedItem().toString());
 					Game game = games.get(gameComboBox.getSelectedItem().toString());
 
-					playerConnection = new PlayerConnection(server, game, port);
+					switch (game.getProtocol()) {
+					case TCP:
+						playerConnection = new PlayerConnectionTcp(server, game, port);
+					case UDP:
+						playerConnection = new PlayerConnectionUdp(server, game, port);
+					}
 					playerConnection.addConnectionListener(SocketRelayClient.this);
 					try {
 						playerConnection.connect();
