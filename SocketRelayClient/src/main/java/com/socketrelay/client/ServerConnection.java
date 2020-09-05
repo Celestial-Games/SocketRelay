@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 import com.socketrelay.client.beans.Game;
 import com.socketrelay.client.beans.Server;
 import com.socketrelay.messages.ClientClose;
-import com.socketrelay.messages.Configuration;
 import com.socketrelay.messages.Data;
+import com.socketrelay.messages.GameStarted;
 import com.socketrelay.messages.Heartbeat;
 
 public class ServerConnection extends Thread implements TrafficCounterSource {
@@ -31,7 +31,6 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 
 	private Server server;
 	private Game game;
-	private Configuration configuration=null;
 
 	private NioSocketConnector connector=null;
 	private ConnectFuture future=null;
@@ -124,10 +123,6 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 		start();
 	}
 
-	public Configuration getConfiguration() {
-		return configuration;
-	}
-
 	public void run() {
 		sendClientsCount();
 		future.awaitUninterruptibly();
@@ -152,8 +147,8 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 			processMessage((Data)message);
 		} else if (message instanceof Heartbeat) {
 			processMessage((Heartbeat)message);
-		} else if (message instanceof Configuration) {
-			processMessage((Configuration)message);
+		} else if (message instanceof GameStarted) {
+			processMessage((GameStarted)message);
 		} else if (message instanceof ClientClose) {
 			processMessage((ClientClose)message);
 		} else {
@@ -161,10 +156,9 @@ public class ServerConnection extends Thread implements TrafficCounterSource {
 		}
 	}
 
-	public void processMessage(Configuration message) {
-		configuration=message;
+	public void processMessage(GameStarted gameStarted) {
 		for (ConnectionListener configurationListener:connectionListeners) {
-			configurationListener.receiveConfiguration(server, message);
+			configurationListener.receiveGameStarted(server, gameStarted);
 		}
 	}
 	

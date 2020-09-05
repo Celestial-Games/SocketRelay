@@ -10,12 +10,10 @@ import java.util.Map;
 
 import com.socketrelay.client.beans.Game;
 import com.socketrelay.client.beans.Server;
-import com.socketrelay.messages.Configuration;
 
 public abstract class PlayerConnection extends Thread implements TrafficCounterSource {
 	protected Server server;
 	protected Game game;
-	protected Configuration configuration=null;
 
 	private List<ConnectionListener> cConnectionListeners=new ArrayList<>();
 	
@@ -42,10 +40,10 @@ public abstract class PlayerConnection extends Thread implements TrafficCounterS
 		cConnectionListeners.remove(connectionListener);
 	}
 
-	public Configuration getConfiguration() {
-		return configuration;
-	}
-
+//	public Configuration getConfiguration() {
+//		return configuration;
+//	}
+//
 	protected void sendClientsCount(int connectionsCount) {
 		for (ConnectionListener configurationListener:cConnectionListeners) {
 			configurationListener.clientConnectedChanged(1, connectionsCount);

@@ -3,11 +3,11 @@ package com.socketrelay.client;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.LogManager;
 
-import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -45,11 +45,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.playfab.PlayFabClientAPI;
+import com.playfab.PlayFabClientModels.UpdateUserTitleDisplayNameRequest;
+import com.playfab.PlayFabClientModels.UpdateUserTitleDisplayNameResult;
+import com.playfab.PlayFabErrors.PlayFabResult;
 import com.socketrelay.client.beans.Config;
 import com.socketrelay.client.beans.Game;
 import com.socketrelay.client.beans.Server;
 import com.socketrelay.client.swing.TextAreaOutputStream;
-import com.socketrelay.messages.Configuration;
+import com.socketrelay.messages.GameStarted;
 
 public class SocketRelayClient extends JFrame implements ConnectionListener {
 	private static final long serialVersionUID = 1L;
@@ -74,6 +78,7 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 	private JLabel gameLabel = new JLabel();
 	private JLabel clientsLabel = new JLabel();
 	private JLabel connectionsLabel = new JLabel();
+	private JLabel nameLabel=new JLabel();
 
 	private TrafficImage trafficImage;
 
@@ -97,7 +102,10 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 
 		setLocationRelativeTo(null);
 
+		Notifications.init(this);
+
 		setVisible(true);
+
 	}
 
 	public Point getBottomRightCornerOffset(int xoffset, int yoffset) {
@@ -257,8 +265,8 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 	}
 
 	@Override
-	public void receiveConfiguration(Server server, Configuration configuration) {
-		connectionLabel.setText("<html><b>" + server.getIp() + ":" + configuration.getClientPort() + "</b></html>");
+	public void receiveGameStarted(Server server, GameStarted gameStarted) {
+		connectionLabel.setText("<html><b>" + server.getIp() + "[" + server.getIp() + "]</b></html>");
 	}
 
 	@Override
@@ -304,9 +312,26 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 		return tabs;
 	}
 
+	private JPanel buildUserPanel() {
+		JPanel panel=new JPanel(new BorderLayout());
+		panel.setBorder(BorderFactory.createEmptyBorder(3, 15, 3, 15));
+		
+		panel.add(SwingUtils.createBlueButtonRight(new ChangeHandleAction()),BorderLayout.EAST);
+		panel.add(nameLabel,BorderLayout.CENTER);
+		
+		nameLabel.setText("<html><h2>Welcome, "+UserConfig.getHandle()+"<h2><html>");
+		
+		return panel;
+	}
+	
 	private void build() {
+		JPanel top=new JPanel(new BorderLayout());
+		top.add(buildUserPanel(), BorderLayout.NORTH);
+		top.add(buildTopPanel(), BorderLayout.CENTER);
+
+		
 		mainPanel = new JPanel(new BorderLayout());
-		mainPanel.add(buildTopPanel(), BorderLayout.NORTH);
+		mainPanel.add(top, BorderLayout.NORTH);
 		mainPanel.add(buildLowerPanel(), BorderLayout.CENTER);
 
 		getContentPane().add(mainPanel);
@@ -401,6 +426,34 @@ public class SocketRelayClient extends JFrame implements ConnectionListener {
 
 	}
 
+	class ChangeHandleAction extends AbstractAction {
+		private static final long serialVersionUID = 1L;
+
+		public ChangeHandleAction() {
+			putValue(NAME, "Change your Handle");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String newhandle=JOptionPane.showInputDialog((Component)e.getSource(),"Enter you new handle.","New Handle",JOptionPane.OK_CANCEL_OPTION);
+			if (newhandle!=null) {
+				UpdateUserTitleDisplayNameRequest request=new UpdateUserTitleDisplayNameRequest();
+				request.DisplayName=newhandle;
+				
+				PlayFabResult<UpdateUserTitleDisplayNameResult> result = PlayFabClientAPI.UpdateUserTitleDisplayName(request);
+				
+				if (result.Result!=null) {
+					newhandle=result.Result.DisplayName;
+					UserConfig.setHandle(newhandle);
+					nameLabel.setText("<html><h2>Welcome, "+UserConfig.getHandle()+"<h2><html>");
+				} else {
+					JOptionPane.showMessageDialog(SocketRelayClient.this, "We were unable to change your handle.\n"+result.Error.errorMessage,"Handle Chagne failed",JOptionPane.WARNING_MESSAGE);
+				}
+			}
+		}
+
+	}
+	
 	class CopyConnection extends AbstractAction {
 		private static final long serialVersionUID = 1L;
 

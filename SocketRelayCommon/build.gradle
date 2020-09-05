@@ -36,7 +36,7 @@ repositories {
 }
 
 dependencies {
-	implementation files('libs/client-sdk-0.108.200402.jar')
+	//implementation files('libs/client-sdk-0.108.200402.jar')
 }
 
 task copyJars(type: Copy, dependsOn: subprojects.jar) {

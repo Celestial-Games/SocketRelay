@@ -1,11 +1,11 @@
 package com.socketrelay.client;
 
 import com.socketrelay.client.beans.Server;
-import com.socketrelay.messages.Configuration;
+import com.socketrelay.messages.GameStarted;
 
 public interface ConnectionListener {
-	public void receiveConfiguration(Server server, Configuration configuration);
 	public void clientConnectedChanged(int clients, int connections);
 	public void serverConnectedClosed();
 	public void gameConnected();
+	public void receiveGameStarted(Server server, GameStarted gameStarted);
 }

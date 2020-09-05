@@ -6,9 +6,14 @@ public class ClientClose implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
 	private String clientId;
-	private int connectionId;
+	private int connectionId=-1;
 	
 	public ClientClose() {
+	}
+	
+	public ClientClose(String clientId) {
+		super();
+		this.clientId = clientId;
 	}
 	
 	public ClientClose(String clientId, int connectionId) {

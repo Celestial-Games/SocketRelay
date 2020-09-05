@@ -8,6 +8,7 @@ public class HostConfiguration implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	private Game game;
+	private String password;
 
 	public HostConfiguration() {
 	}
@@ -24,4 +25,13 @@ public class HostConfiguration implements Serializable {
 	public void setGame(Game game) {
 		this.game = game;
 	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
 }

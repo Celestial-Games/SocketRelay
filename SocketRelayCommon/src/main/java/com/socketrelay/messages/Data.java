@@ -11,7 +11,7 @@ public class Data implements Serializable {
 	
 	public Data() {
 	}
-	
+
 	public Data(String clientId, int connectionId, byte[] data) {
 		super();
 		this.clientId = clientId;

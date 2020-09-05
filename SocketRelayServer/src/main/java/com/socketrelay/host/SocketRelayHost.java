@@ -1,6 +1,7 @@
 package com.socketrelay.host;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.LogManager;
 
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
@@ -62,6 +64,7 @@ public class SocketRelayHost {
         InetSocketAddress inetSocketAddress=new InetSocketAddress(config.getServerIp(), config.getServerport());
         
 		acceptor.bind(inetSocketAddress);
+		logger.info("Socket Relay listener started on "+inetSocketAddress.toString());
 	}
 
 	public void close() {
@@ -148,6 +151,18 @@ public class SocketRelayHost {
 	}
 
 	public static void main(String[] args) {
+		try {
+			File loggingConfigFile = new File("logging.properties");
+			if (loggingConfigFile.exists()) {
+				FileInputStream loggingConfigFileStream = new FileInputStream(loggingConfigFile);
+				LogManager.getLogManager().readConfiguration(loggingConfigFileStream);
+				loggingConfigFileStream.close();
+			}
+		} catch (IOException ex) {
+			logger.error(ex.getMessage(), ex);
+			System.exit(-1);
+		}
+
 		try {
 			if (!getArguments(args)) {
 				logger.error("Unable to start SocketRelay server.");
